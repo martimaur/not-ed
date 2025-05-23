@@ -1,0 +1,218 @@
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+@font-face {
+    font-family: 'Source Code Pro';
+    font-style: normal;
+    font-weight: 400;
+    src: url('https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap');
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Source Code Pro', monospace;
+    background-color: transparent;
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    min-width: 100%;
+    overflow: hidden;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100vw;
+    min-height: 100vh;
+}
+
+/* App container */
+.app-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: #4d4d4d;
+    background-image: linear-gradient(to bottom, rgba(205, 143, 143, 0.03), rgba(179, 218, 255, 0.2));
+    border-radius: 0px;
+    overflow: hidden;
+}
+
+/* Title bar */
+.title-bar {
+    height: 38px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #373737;
+    padding: 0 12px;
+    -webkit-app-region: drag; /* Makes the title bar draggable */
+    user-select: none;
+}
+
+.title {
+    color: #dadada;
+    font-size: 16px;
+    font-family: 'Source Code Pro', monospace;
+    font-weight: 400;
+}
+
+/* Window control buttons */
+.window-controls {
+    display: flex;
+    gap: 8px;
+    -webkit-app-region: no-drag; /* Makes buttons clickable */
+}
+
+.control-btn {
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    cursor: pointer;
+    outline: none;
+}
+
+.control-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.close-btn:hover {
+    background-color: #e81123;
+}
+
+/* Main content area */
+.main-content {
+    flex: 1;
+    width: 100%;
+    overflow: auto;
+    position: relative;
+}
+
+/* Board */
+.board-2e0bd183d5ec {
+    position: relative;
+    width: 1000px;
+    height: 700px;
+    background: #FFFFFF;
+    border-radius: 0;
+    overflow: hidden;
+    z-index: 0;
+}
+
+/* Title Bar - make draggable */
+.rectangle-2e0cf0cbcf02 {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1000px;
+    height: 45px;
+    background: #616161;
+    border-radius: 0;
+    -webkit-app-region: drag;
+}
+
+/* App title - ¬ed */
+.ed-2e127e77916e {
+    position: absolute;
+    left: 4px;
+    top: 0;
+    width: 57px;
+    height: 45px;
+}
+
+.ed-2e127e77916e .root-0 {
+    display: flex;
+    white-space: break-spaces;
+    align-items: flex-start;
+}
+
+.ed-2e127e77916e .root-0-paragraph-set-0 {
+    display: inline-flex;
+    flex-direction: column;
+    min-width: 100%;
+    margin-right: 1px;
+    vertical-align: top;
+}
+
+.ed-2e127e77916e .root-0-paragraph-set-0-paragraph-0 {
+    font-size: 0;
+    line-height: 1.4;
+    margin: 0;
+    text-align: left;
+}
+
+.ed-2e127e77916e .root-0-paragraph-set-0-paragraph-0-text-0 {
+    color: rgba(218, 218, 218, 1);
+    font-size: 30px;
+    font-family: "Source Code Pro", monospace;
+    font-weight: 400;
+}
+
+/* Close button */
+.bsxlg-2e11abc6b04d {
+    position: absolute;
+    left: 961px;
+    top: 6px;
+    width: 32px;
+    height: 32px;
+    -webkit-app-region: no-drag;
+    cursor: pointer;
+}
+
+/* Maximize button */
+.fimaximiz-2e10ea2df264 {
+    position: absolute;
+    left: 921px;
+    top: 6px;
+    width: 32px;
+    height: 32px;
+    -webkit-app-region: no-drag;
+    cursor: pointer;
+}
+
+/* Minimize button */
+.fiminimiz-2e0f6228d21f {
+    position: absolute;
+    left: 881px;
+    top: 6px;
+    width: 32px;
+    height: 32px;
+    -webkit-app-region: no-drag;
+    cursor: pointer;
+}
+
+/* Content area */
+.rectangle-2e0c1cbb3c27 {
+    position: absolute;
+    left: 0;
+    top: 45px;
+    width: 1000px;
+    height: 655px;
+    border-radius: 0;
+    background-color: #4d4d4d;
+    background-image: linear-gradient(to bottom, rgba(205, 143, 143, 0.03), rgba(179, 218, 255, 0.2));
+}
+
+/* Button hover effects */
+.fiminimiz-2e0f6228d21f:hover,
+.fimaximiz-2e10ea2df264:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.bsxlg-2e11abc6b04d:hover {
+    background-color: #e81123;
+    border-radius: 4px;
+}
