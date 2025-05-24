@@ -1,51 +1,20 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>¬ed</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <div class="board-2e0bd183d5ec">
-        <!-- Title bar with window controls -->
-        <div class="rectangle-2e0cf0cbcf02">
-            <!-- App title -->
-            <div class="ed-2e127e77916e">
-                <div class="root-0">
-                    <div class="root-0-paragraph-set-0">
-                        <div class="root-0-paragraph-set-0-paragraph-0">
-                            <span class="root-0-paragraph-set-0-paragraph-0-text-0">¬ed</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Window controls from Penpot -->
-            <div class="fiminimiz-2e0f6228d21f">
-                <svg viewBox="0 0 24 24" width="24" height="24">
-                    <path d="M20,12H4" stroke="#dadada" stroke-width="2" fill="none"></path>
-                </svg>
-            </div>
-            
-            <div class="fimaximiz-2e10ea2df264">
-                <svg viewBox="0 0 24 24" width="24" height="24">
-                    <path d="M4,4H20V20H4V4Z" stroke="#dadada" stroke-width="2" fill="none"></path>
-                </svg>
-            </div>
-            
-            <div class="bsxlg-2e11abc6b04d">
-                <svg viewBox="0 0 24 24" width="24" height="24">
-                    <path d="M18,6L6,18M6,6L18,18" stroke="#dadada" stroke-width="2"></path>
-                </svg>
-            </div>
-        </div>
-        
-        <!-- Main content area -->
-        <div class="rectangle-2e0c1cbb3c27">
-            <!-- Your app content goes here -->
-        </div>
+<header>
+  <h1>¬ed</h1>
+</header>
+<main>
+  <div class="task-list">
+    <!-- Tasks will be added here dynamically -->
+  </div>
+  <div id="task-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+    <input type="text" id="task-input" placeholder="Enter new task" />
+    	<button id="task-submit-btn">Add</button>
+      <button id="task-cancel-btn">Cancel</button>
     </div>
-    
-    <script src="renderer.js"></script>
-</body>
-</html>
+  </div>
+  <button class="add-task-btn" id="add-task-btn">
+    <span class="plus-icon">+</span>
+    Add new task
+  </button>
+</main>
+<script src="./renderer.js"></script>

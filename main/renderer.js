@@ -1,18 +1,38 @@
 const { ipcRenderer } = require('electron');
+console.log('Hello worlds!');
+// Task management UI
+const taskList = document.querySelector('.task-list');
+const addTaskBtn = document.getElementById('add-task-btn');
+const taskModal = document.getElementById('task-modal');
+const taskInput = document.getElementById('task-input');
+const taskSubmitBtn = document.getElementById('task-submit-btn');
+const taskCancelBtn = document.getElementById('task-cancel-btn');
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Window control buttons
-    document.getElementById('minimize-btn').addEventListener('click', () => {
-        ipcRenderer.send('window-controls', 'minimize');
-    });
+addTaskBtn.addEventListener('click', () => {
+    console.log('Add new task button pressed');
+    taskInput.value = '';
+    taskModal.style.display = 'block';
+    taskInput.focus();
+});
 
-    document.getElementById('maximize-btn').addEventListener('click', () => {
-        ipcRenderer.send('window-controls', 'maximize');
-    });
+taskSubmitBtn.addEventListener('click', () => {
+    const taskText = taskInput.value;
+    if (taskText && taskText.trim() !== '') {
+        const taskDiv = document.createElement('div');
+        taskDiv.className = 'task';
 
-    document.getElementById('close-btn').addEventListener('click', () => {
-        ipcRenderer.send('window-controls', 'close');
-    });
+        const span = document.createElement('span');
+        span.className = 'task-text';
+        span.textContent = taskText;
+        taskDiv.appendChild(span);
+    }
+});
 
-    // Add your other app functionality here
+taskCancelBtn.addEventListener('click', () => {
+    taskModal.style.display = 'none';
+});
+
+// Optional: allow Enter key to submit
+taskInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') taskSubmitBtn.click();
 });
