@@ -1,0 +1,237 @@
+/* Variables */
+:root {
+    /* Colors */
+    --accent-color: #6b46c1;
+    --secondary-color: #4a4a4a;
+    --text-color: #e5e5e5;
+    --border-color: #666;
+
+    /* Spacing */
+    --left-margin: 20px;
+    --task-spacing: 10px;
+}
+
+/* Basic dark theme for the body */
+body {
+    background: #1e1e1e;
+    color: #e5e5e5;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.app {
+    min-height: 100vh;
+}
+
+.app header {
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.app header h1 {
+    margin: 0;
+    color: var(--text-color);
+    font-size: 2rem;
+}
+
+.app main {
+    padding: 20px;
+}
+
+/* Task list container */
+.task-list {
+    max-width: 600px;
+    margin: 0 0;
+}
+
+/* Task styling */
+.task {
+    background: #3a3a3a;
+    border: 2px solid #666;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: var(--task-spacing) var(--left-margin);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.task:hover {
+    background: #4a4a4a;
+    border-color: var(--accent-color);
+}
+
+.task-text {
+    color: #e5e5e5;
+    font-size: 14px;
+    flex-grow: 1;
+    transition: all 0.2s ease;
+}
+
+.task-text.completed {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
+.task-checkbox {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #666;
+    border-radius: 4px;
+    background: transparent;
+    appearance: none;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.task-checkbox:checked {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.task-checkbox:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.task-checkbox:hover {
+    border-color: var(--accent-color);
+}
+
+/* Input styling to match dark theme */
+#task-input {
+    background: #2a2a2a;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: var(--text-color);
+    font-size: 14px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    outline: none;
+    transition: border-color 0.2s ease;
+    flex-grow: 1;
+    margin-right: 8px;
+}
+
+#task-input:focus {
+    border-color: var(--accent-color);
+}
+
+#task-input::placeholder {
+    color: #888;
+}
+
+/* Button styling */
+#task-submit-btn, #task-cancel-btn {
+    background: var(--secondary-color);
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    padding: 8px 16px;
+    color: var(--text-color);
+    font-size: 14px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-left: 4px;
+}
+
+#task-submit-btn:hover, #task-cancel-btn:hover {
+    background: #5a5a5a;
+    border-color: var(--accent-color);
+}
+
+/* Add button styling */
+.add-task-btn {
+    background: #3a3a3a;
+    border: 2px dashed #666;
+    border-radius: 10%;
+    padding: 12px;
+    color: #888;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 32px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin: var(--task-spacing) var(--left-margin);
+    width: 44px;
+    height: 44px;
+    position: relative;
+}
+
+.add-task-btn:hover {
+    background: #4a4a4a;
+    border-color: var(--accent-color);
+    color: #e5e5e5;
+}
+
+.add-task-btn::before {
+    content: "+";
+    font-size: 36px;
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.plus-icon {
+    font-size: 30px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50%;
+    height: 0%;
+}
+
+/* Text outside the button */
+.add-task-btn::after {
+    content: "Add new task";
+    position: absolute;
+    left: 53px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #888;
+    font-size: 14px;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+}
+
+.add-task-btn:hover::after {
+    color: #e5e5e5;
+}
+
+/* Modal styling */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal .task {
+    background: #3a3a3a;
+    border: 2px solid var(--accent-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 0;
+    min-width: 400px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}

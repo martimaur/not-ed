@@ -41,7 +41,7 @@ app.whenReady().then(() => {
     // Remove the menu bar
     myWindow.setMenuBarVisibility(false);
 
-    myWindow.loadFile('index.html');
+    myWindow.loadFile('dist/index.html');
 })
 
 app.on('window-all-closed', () => {

@@ -2,11 +2,31 @@
   "name": "noted",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "build": "webpack",
+    "dev": "webpack serve --open",
+    "dev-build": "webpack --watch",
+    "electron": "electron .",
+    "start": "npm run build && npm run electron",
+    "dev-electron": "concurrently \"npm run dev-build\" \"wait-on dist/index.html && npm run electron\""
   },
   "description": "",
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
   "devDependencies": {
+    "@babel/core": "^7.28.0",
+    "@babel/preset-react": "^7.27.1",
+    "babel-loader": "^10.0.0",
+    "concurrently": "^8.2.0",
+    "css-loader": "^7.1.2",
     "electron": "^33.2.0",
-    "electron-reloader": "^1.2.3"
+    "electron-reloader": "^1.2.3",
+    "html-webpack-plugin": "^5.5.0",
+    "style-loader": "^4.0.0",
+    "wait-on": "^7.0.1",
+    "webpack": "^5.100.1",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^4.15.0"
   }
 }
