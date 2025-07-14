@@ -66,6 +66,9 @@ async function loadTasks() {
             
             console.log('Tasks loaded successfully');
         }
+        
+        await new Promise(resolve);
+        
     } catch (error) {
         console.error('Error loading tasks:', error);
     }
@@ -188,12 +191,18 @@ function doAddTask() {
 
 // Load tasks when the app starts
 document.addEventListener('DOMContentLoaded', async () => {   
+    console.log('DOM loaded, loading tasks...');
     await loadTasks();
+    console.log('Tasks loaded, initializing Sortable...');
     Sortable.create(taskList, {
         animation: 240,
         ghostClass: 'sortable-ghost'
     });
     
+    // Give a bit more time for everything to render
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    console.log('Sending renderer-ready signal...');
     // Tell main process that we're ready to show the window
     ipcRenderer.send('renderer-ready');
 });

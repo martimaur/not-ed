@@ -17,7 +17,8 @@ app.whenReady().then(() => {
         height: 700,
         webPreferences: {
             nodeIntegration: true,
-            contextIsolation: false
+            contextIsolation: false,
+            webSecurity: false
         },
         frame: true, // use for frameless window
         transparent: false,
@@ -25,7 +26,8 @@ app.whenReady().then(() => {
         minWidth: 800,
         minHeight: 600,
         show: false, // Don't show window until ready
-        backgroundColor: '#1e1e1e' // Match your dark theme
+        backgroundColor: '#1e1e1e', // Match your dark theme
+        titleBarStyle: 'default'
     });
 
     // Set up IPC handlers for window controls
@@ -106,10 +108,12 @@ app.whenReady().then(() => {
 
     myWindow.loadFile('index.html');
     
-    // Show window when ready to prevent white flash
-    myWindow.once('ready-to-show', () => {
-        myWindow.show();
-    });
+    // Fallback: show window after 1 second if renderer-ready hasn't fired
+    setTimeout(() => {
+        if (!myWindow.isVisible()) {
+            myWindow.show();
+        }
+    }, 1000);
 })
 
 app.on('window-all-closed', () => {
