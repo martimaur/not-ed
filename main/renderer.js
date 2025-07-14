@@ -17,9 +17,118 @@ const editCloseBtn = document.getElementById('edit-close-btn');
 // Current task being edited
 let currentEditTask = null;
 let originalTaskText = '';
+let loaded = false;
 
-//const Sortable = require('sortablejs');
 
+// Function to collect all tasks from the DOM and convert to JSON
+function collectTasksAsJSON() {
+    const taskElements = taskList.querySelectorAll('.task');
+    const tasks = Array.from(taskElements).map((taskDiv, index) => {
+        const checkbox = taskDiv.querySelector('.task-checkbox');
+        const textSpan = taskDiv.querySelector('.task-text');
+        return {
+            id: index + 1,
+            text: textSpan.textContent.trim(),
+            completed: checkbox.checked,
+            order: index
+        };
+    });
+    return tasks;
+}
+
+// Function to save tasks (only saves, doesn't reload)
+async function saveTasks() {
+    const tasks = collectTasksAsJSON();
+    try {
+        const result = await ipcRenderer.invoke('save-tasks', tasks);
+        if (result.success) {
+            console.log('Tasks saved successfully');
+        } else {
+            console.error('Failed to save tasks:', result.error);
+        }
+    } catch (error) {
+        console.error('Error saving tasks:', error);
+    }
+}
+
+// Function to load tasks on startup
+async function loadTasks() {
+    try {
+        const result = await ipcRenderer.invoke('load-tasks');
+        if (result.success && result.tasks.length > 0) {
+            // Clear existing tasks
+            taskList.innerHTML = '';
+            
+            // Sort tasks by order and recreate them
+            result.tasks.sort((a, b) => a.order - b.order).forEach(task => {
+                createTaskFromData(task);
+            });
+            
+            console.log('Tasks loaded successfully');
+        }
+    } catch (error) {
+        console.error('Error loading tasks:', error);
+    }
+}
+
+// Function to create a task element from saved data
+function createTaskFromData(taskData) {
+    const taskDiv = document.createElement('div');
+    taskDiv.className = 'task';
+    
+    // Add completed class if task was completed
+    if (taskData.completed) {
+        taskDiv.classList.add('completed');
+    }
+
+    // checkbox first
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'task-checkbox';
+    checkbox.checked = taskData.completed;
+    checkbox.title = 'Mark completed';
+    taskDiv.appendChild(checkbox);
+
+    // text second
+    const span = document.createElement('span');
+    span.className = 'task-text';
+    span.textContent = taskData.text;
+    taskDiv.appendChild(span);
+
+    // edit button third
+    const editBtn = document.createElement('button');
+    editBtn.className = 'task-edit-btn';
+    editBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>';
+    editBtn.title = 'Edit task';
+    editBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showEditModal(taskDiv, span);
+    });
+    taskDiv.appendChild(editBtn);
+
+    // Add click listener to the entire task div to toggle checkbox
+    taskDiv.addEventListener('click', (e) => {
+        if (e.target === checkbox || e.target === editBtn || editBtn.contains(e.target)) {
+            return;
+        }
+        checkbox.checked = !checkbox.checked;
+        toggleTaskCompletion(taskDiv, checkbox);
+    });
+
+    // Add listener to checkbox for direct clicks
+    checkbox.addEventListener('change', (e) => {
+        toggleTaskCompletion(taskDiv, checkbox);
+    });
+
+    taskList.appendChild(taskDiv);
+}
+
+// Listen for save request from main process
+ipcRenderer.on('request-tasks-for-save', () => {
+    saveTasks();
+});
+
+// Function to add a new task
 function doAddTask() {
     const taskText = taskInput.value;
     if (taskText && taskText.trim() !== '') {
@@ -57,7 +166,6 @@ function doAddTask() {
                 return;
             }
             checkbox.checked = !checkbox.checked;
-            // Trigger completion animation
             toggleTaskCompletion(taskDiv, checkbox);
         });
 
@@ -68,14 +176,26 @@ function doAddTask() {
 
         taskList.appendChild(taskDiv);
         taskInput.value = '';
+        
+        // Hide modal and show add button
+        taskModal.style.display = 'none';
+        addTaskBtn.style.display = 'block';
+        
+        // Save tasks after adding
+        //saveTasks();
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+// Load tasks when the app starts
+document.addEventListener('DOMContentLoaded', async () => {   
+    await loadTasks();
     Sortable.create(taskList, {
         animation: 240,
         ghostClass: 'sortable-ghost'
     });
+    
+    // Tell main process that we're ready to show the window
+    ipcRenderer.send('renderer-ready');
 });
 
 addTaskBtn.addEventListener('click', () => {
@@ -84,6 +204,13 @@ addTaskBtn.addEventListener('click', () => {
     taskModal.style.display = 'block';
     addTaskBtn.style.display = 'none';
     taskInput.focus();
+});
+
+// Cancel button functionality
+taskCancelBtn.addEventListener('click', () => {
+    taskModal.style.display = 'none';
+    addTaskBtn.style.display = 'block';
+    taskInput.value = '';
 });
 
 // Modal buttons
@@ -193,6 +320,7 @@ function hideEditModal() {
         const newText = editInput.value.trim();
         if (newText) {
             currentEditTask.taskTextSpan.textContent = newText;
+            //saveTasks(); // Save after editing
         }
     }
     editModal.style.display = 'none';
@@ -204,6 +332,7 @@ function hideEditModal() {
 function deleteTask() {
     if (currentEditTask) {
         currentEditTask.taskDiv.remove();
+        //saveTasks(); // Save after deletion
         editModal.style.display = 'none';
         editModalContent.classList.remove('modified');
         currentEditTask = null;
@@ -227,4 +356,7 @@ function toggleTaskCompletion(taskDiv, checkbox) {
         taskDiv.classList.remove('completed');
         taskDiv.classList.remove('completing');
     }
+    
+    // Save tasks after completion state change
+    //saveTasks();
 }
