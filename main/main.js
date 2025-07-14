@@ -1,5 +1,8 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('path')
+try {
+  require('electron-reloader')(module)
+} catch (_) {}
 
 app.whenReady().then(() => {
     const myWindow = new BrowserWindow({
@@ -9,7 +12,7 @@ app.whenReady().then(() => {
             nodeIntegration: true,
             contextIsolation: false
         },
-        frame: false, // Keep the frameless design
+        frame: true, // use for frameless window
         transparent: false,
         resizable: true,
         minWidth: 800,
@@ -34,6 +37,9 @@ app.whenReady().then(() => {
                 break;
         }
     });
+    
+    // Remove the menu bar
+    myWindow.setMenuBarVisibility(false);
 
     myWindow.loadFile('index.html');
 })

@@ -1,5 +1,4 @@
 const { ipcRenderer } = require('electron');
-console.log('Hello worlds!');
 // Task management UI
 const taskList = document.querySelector('.task-list');
 const addTaskBtn = document.getElementById('add-task-btn');
@@ -14,12 +13,21 @@ function doAddTask() {
     if (taskText && taskText.trim() !== '') {
         const taskDiv = document.createElement('div');
         taskDiv.className = 'task';
-        taskList.appendChild(taskDiv);
+
+        // text first
         const span = document.createElement('span');
         span.className = 'task-text';
         span.textContent = taskText;
         taskDiv.appendChild(span);
-        taskInput.value = ''; // Clear the input field after submission
+
+        // checkbox second
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'task-checkbox';
+        taskDiv.appendChild(checkbox);
+
+        taskList.appendChild(taskDiv);
+        taskInput.value = '';
     }
 }
 
@@ -44,9 +52,7 @@ taskCancelBtn.addEventListener('click', () => {
 });
 
 // Handle task submission
-taskSubmitBtn.addEventListener('click', () => {
-    doAddTask();
-});
+taskSubmitBtn.addEventListener('click', doAddTask());
 
 // Allow Enter key to submit
 document.addEventListener('keydown', (e) => {

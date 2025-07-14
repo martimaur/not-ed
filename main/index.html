@@ -1,3 +1,7 @@
+<head>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
 <header>
   <h1>¬ed</h1>
 </header>
@@ -6,16 +10,13 @@
     <!-- Tasks will be added here dynamically -->
   </div>
   <div id="task-modal" class="modal" style="display:none;">
-    <div class="modal-content">
-    <input type="text" id="task-input" placeholder="Enter new task" />
+    <div class="task">
+    <input type="task-text" id="task-input" placeholder="Enter new task" />
     	<button id="task-submit-btn">Add</button>
       <button id="task-cancel-btn">Cancel</button>
     </div>
   </div>
-  <button class="add-task-btn" id="add-task-btn">
-    <span class="plus-icon">+</span>
-    Add new task
-  </button>
+  <button class="add-task-btn" id="add-task-btn"></button>
 </main>
 <script src="./renderer.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
