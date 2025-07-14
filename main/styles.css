@@ -36,9 +36,66 @@ body {
     padding: 12px 16px;
     margin: var(--task-spacing) var(--left-margin);
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 12px;
     transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Completion animation styles */
+.task.completing {
+    animation: taskPop 0.3s ease;
+}
+
+.task.completed {
+    background: #2c2c2c;
+    border-color: #22c55e;
+    position: relative;
+}
+
+.task.completed::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.2), transparent);
+    animation: swooshEffect 0.6s ease-out;
+}
+
+.task.completed .task-text {
+    color: #999;
+    transition: color 0.4s ease;
+}
+
+@keyframes taskPop {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes swooshEffect {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+.task.completed:hover {
+    border-color: #28a158;
+    background: #3b3b3b;
+    position: relative;
 }
 
 .task:hover {
@@ -50,6 +107,10 @@ body {
     color: #e5e5e5;
     font-size: 14px;
     flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
 }
 
 .task-checkbox {
@@ -62,26 +123,72 @@ body {
     cursor: pointer;
     position: relative;
     transition: all 0.2s ease;
+    flex-shrink: 0;
 }
 
 .task-checkbox:checked {
-    background: var(--accent-color);
-    border-color: var(--accent-color);
+    background: #22c55e;
+    border-color: #22c55e;
 }
 
 .task-checkbox:checked::after {
-    content: '✓';
+    content: '';
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    color: white;
-    font-size: 12px;
-    font-weight: bold;
+    width: 12px;
+    height: 12px;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%233b3b3b' stroke-width='3'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M5 13l4 4L19 7'/%3e%3c/svg%3e");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .task-checkbox:hover {
     border-color: var(--accent-color);
+}
+
+/* Edit button styling */
+.task-edit-btn {
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    padding: 6px;
+    color: #cfcfcf;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    opacity: 0;
+    transform: translateX(8px);
+}
+
+.task-edit-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+}
+
+.task:hover .task-edit-btn {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.task-edit-btn:hover {
+    background: #5a5a5a;
+    color: var(--accent-color);
+    transform: scale(1.1);
+}
+
+.task-edit-btn:active {
+    background: var(--accent-color);
+    color: white;
+    transform: scale(0.95);
 }
 
 /* Input styling to match dark theme */
@@ -183,4 +290,162 @@ body {
 
 .add-task-btn:hover::after {
     color: #e5e5e5;
+}
+
+/* Modal Overlay Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #2a2a2a;
+    border-radius: 12px;
+    border: 2px solid var(--border-color);
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px 0 20px;
+}
+
+.modal-title {
+    margin: 0;
+    color: var(--text-color);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    background: var(--secondary-color);
+    color: var(--text-color);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.edit-task-input {
+    width: 100%;
+    background: #1e1e1e;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--text-color);
+    font-size: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    outline: none;
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+    resize: none;
+    overflow-y: hidden;
+    min-height: 80px;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.edit-task-input:focus {
+    border-color: var(--accent-color);
+}
+
+.modal-content.modified {
+    /*border-color: #e4e4e4;*/
+    box-shadow: 0 0 0 2px oklch(89.755% 0.0001 271.152 / 0.671);
+}
+
+.edit-task-input::placeholder {
+    color: #888;
+}
+
+.modal-footer {
+    padding: 20px;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.btn-primary {
+    background: var(--accent-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #5b3ba3;
+}
+
+.btn-secondary {
+    background: var(--secondary-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: #5a5a5a;
+}
+
+.btn-delete {
+    background: #ce3030;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+}
+
+.btn-delete:hover {
+    background: #b91c1c;
 }
