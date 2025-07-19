@@ -1,11 +1,50 @@
 const { ipcRenderer } = require('electron');
+
+// Window controls
+const minimizeBtn = document.getElementById('minimize-btn');
+const maximizeBtn = document.getElementById('maximize-btn');
+const closeBtn = document.getElementById('close-btn');
+const titleBar = document.getElementById('title-bar');
+
+// Window control event listeners
+minimizeBtn.addEventListener('click', () => {
+    ipcRenderer.send('window-controls', 'minimize');
+});
+
+maximizeBtn.addEventListener('click', () => {
+    ipcRenderer.send('window-controls', 'maximize');
+});
+
+closeBtn.addEventListener('click', () => {
+    ipcRenderer.send('window-controls', 'close');
+});
+
+// Title bar drag functionality with double-click to maximize
+let titleBarClickCount = 0;
+let titleBarClickTimer = null;
+
+titleBar.addEventListener('mousedown', (e) => {
+    // Only trigger on the drag region, not on control buttons
+    if (e.target.closest('.title-bar-controls')) return;
+    
+    titleBarClickCount++;
+    
+    if (titleBarClickCount === 1) {
+        titleBarClickTimer = setTimeout(() => {
+            titleBarClickCount = 0;
+        }, 300);
+    } else if (titleBarClickCount === 2) {
+        clearTimeout(titleBarClickTimer);
+        titleBarClickCount = 0;
+        // Double-click to maximize/restore
+        ipcRenderer.send('window-controls', 'maximize');
+    }
+});
+
 // Task management UI
 const taskList = document.querySelector('.task-list');
-const addTaskBtn = document.getElementById('add-task-btn');
-const taskModal = document.getElementById('task-modal');
-const taskInput = document.getElementById('task-input');
-const taskSubmitBtn = document.getElementById('task-submit-btn');
-const taskCancelBtn = document.getElementById('task-cancel-btn');
+const addTaskBtn = document.getElementById('add-tab-btn'); // Changed to use tab add button
+const quickAddInput = document.getElementById('quick-add-input');
 
 // Edit modal elements
 const editModal = document.getElementById('edit-modal');
@@ -18,6 +57,374 @@ const editCloseBtn = document.getElementById('edit-close-btn');
 let currentEditTask = null;
 let originalTaskText = '';
 let loaded = false;
+
+// Tab management
+let currentTabId = null;
+let tabs = {};
+
+// Tab elements
+const tabContainer = document.querySelector('.tab-container');
+// addTabBtn is now the same as addTaskBtn, so we don't need both
+
+// Context menu elements
+const contextMenu = document.getElementById('context-menu');
+const contextRename = document.getElementById('context-rename');
+const contextClear = document.getElementById('context-clear');
+const contextDelete = document.getElementById('context-delete');
+let contextMenuTarget = null;
+
+// Function to ensure we always have at least one tab
+function ensureHomeTabExists() {
+    const tabCount = Object.keys(tabs).length;
+    console.log(`Current tab count: ${tabCount}`);
+    
+    if (tabCount === 0) {
+        console.log('No tabs exist, creating Home tab');
+        const homeId = 'home_' + Date.now();
+        tabs[homeId] = { name: 'Home', tasks: [] };
+        
+        // Create the tab element
+        const homeTab = createTab(homeId, 'Home');
+        
+        // Switch to it
+        switchToTab(homeId);
+        
+        // Save the new tab structure
+        saveTabs();
+        
+        return homeId;
+    }
+    
+    return null;
+}
+
+// Tab functionality
+function createTab(id, name) {
+    const tab = document.createElement('div');
+    tab.className = 'tab';
+    tab.setAttribute('data-tab-id', id);
+    
+    tab.innerHTML = `
+        <span class="tab-name">${name}</span>
+        <input class="tab-name-input" type="text" style="display: none;" />
+    `;
+    
+    // Insert before the add button
+    tabContainer.insertBefore(tab, addTaskBtn);
+    
+    // Add click event
+    tab.addEventListener('click', () => switchToTab(id));
+    
+    // Add double-click event for renaming
+    tab.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        startTabRename(tab, id);
+    });
+    
+    // Add right-click context menu
+    tab.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        showContextMenu(e, tab, id);
+    });
+    
+    return tab;
+}
+
+function switchToTab(tabId) {
+    // Save current tab's tasks
+    saveCurrentTabTasks();
+    
+    // Update active tab visually
+    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+    const targetTab = document.querySelector(`[data-tab-id="${tabId}"]`);
+    if (targetTab) {
+        targetTab.classList.add('active');
+    }
+    
+    // Switch to new tab
+    currentTabId = tabId;
+    loadTabTasks(tabId);
+}
+
+function saveCurrentTabTasks() {
+    console.log(`Attempting to save tasks for tab: ${currentTabId}`);
+    console.log('Current tabs object:', tabs);
+    console.log('Tasks in DOM:', taskList.children.length);
+    if (tabs[currentTabId]) {
+        const tasks = collectTasksAsJSON();
+        console.log(`Saving tasks for tab ${currentTabId}:`, tasks);
+        tabs[currentTabId].tasks = tasks;
+        console.log(`Tasks saved to tab ${currentTabId}. Total tasks: ${tasks.length}`);
+    } else {
+        console.error(`Tab ${currentTabId} not found in tabs object!`);
+        console.log('Available tabs:', Object.keys(tabs));
+    }
+}
+
+function loadTabTasks(tabId) {
+    console.log(`Loading tasks for tab: ${tabId}`);
+    taskList.innerHTML = '';
+    if (tabs[tabId] && tabs[tabId].tasks) {
+        console.log(`Found ${tabs[tabId].tasks.length} tasks for tab ${tabId}`);
+        tabs[tabId].tasks.forEach(task => {
+            createTaskFromData(task);
+        });
+        console.log(`Loaded ${tabs[tabId].tasks.length} tasks into DOM`);
+    } else {
+        console.log(`No tasks found for tab ${tabId} or tab doesn't exist`);
+    }
+}
+
+function startTabRename(tabElement, tabId) {
+    const nameSpan = tabElement.querySelector('.tab-name');
+    const nameInput = tabElement.querySelector('.tab-name-input');
+    
+    nameInput.value = nameSpan.textContent;
+    nameSpan.style.display = 'none';
+    nameInput.style.display = 'block';
+    nameInput.focus();
+    nameInput.select();
+    
+    function finishRename() {
+        const newName = nameInput.value.trim();
+        if (newName && newName !== nameSpan.textContent) {
+            nameSpan.textContent = newName;
+            tabs[tabId].name = newName;
+            saveTabs();
+        }
+        nameInput.style.display = 'none';
+        nameSpan.style.display = 'block';
+    }
+    
+    nameInput.addEventListener('blur', finishRename, { once: true });
+    nameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            nameInput.blur();
+        } else if (e.key === 'Escape') {
+            nameInput.value = nameSpan.textContent;
+            nameInput.blur();
+        }
+    }, { once: true });
+}
+
+function addNewTab() {
+    const id = 'tab_' + Date.now();
+    const defaultName = 'New Tab';
+    
+    // Create the tab data
+    tabs[id] = { name: defaultName, tasks: [] };
+    
+    // Create the tab element
+    const newTab = createTab(id, defaultName);
+    
+    // Switch to the new tab
+    switchToTab(id);
+    
+    // Immediately start renaming the tab
+    setTimeout(() => {
+        startTabRename(newTab, id);
+    }, 50);
+    
+    // Save tabs
+    saveTabs();
+}
+
+function saveTabs() {
+    // Save current tab's tasks before saving all tabs
+    saveCurrentTabTasks();
+    console.log('Saving tabs to file:', tabs);
+    
+    // Save to file instead of localStorage
+    ipcRenderer.invoke('save-tabs', tabs).then(result => {
+        if (result.success) {
+            console.log('Tabs saved successfully to file');
+        } else {
+            console.error('Failed to save tabs:', result.error);
+        }
+    });
+    
+    // Also save current tab to localStorage for quick access
+    localStorage.setItem('noted-current-tab', currentTabId);
+}
+
+async function loadTabs() {
+    console.log('Loading tabs from file...');
+    
+    try {
+        // Load tabs from file
+        const result = await ipcRenderer.invoke('load-tabs');
+        const savedCurrentTab = localStorage.getItem('noted-current-tab');
+        
+        console.log('File load result:', result);
+        console.log('Saved current tab from localStorage:', savedCurrentTab);
+        
+        if (result.success && result.tabs) {
+            tabs = result.tabs;
+            
+            // Create tab elements for all saved tabs
+            Object.keys(tabs).forEach(tabId => {
+                createTab(tabId, tabs[tabId].name);
+            });
+            
+            // Switch to the saved current tab if it exists
+            if (savedCurrentTab && tabs[savedCurrentTab]) {
+                switchToTab(savedCurrentTab);
+            } else {
+                // Switch to the first available tab
+                const tabIds = Object.keys(tabs);
+                if (tabIds.length > 0) {
+                    switchToTab(tabIds[0]);
+                }
+            }
+        } else {
+            // No saved tabs, start fresh
+            tabs = {};
+            
+            // Check if there are old tasks to migrate to home tab
+            await migrateOldTasksToHomeTab();
+        }
+        
+        // Ensure we always have at least one tab
+        ensureHomeTabExists();
+        
+        console.log('Tabs loaded from file:', tabs);
+    } catch (error) {
+        console.error('Error loading tabs:', error);
+        // Fallback to empty tabs
+        tabs = {};
+        ensureHomeTabExists();
+    }
+}
+
+// Function to migrate old tasks from the file system to a new home tab
+async function migrateOldTasksToHomeTab() {
+    try {
+        const result = await ipcRenderer.invoke('load-tasks');
+        if (result.success && result.tasks && result.tasks.length > 0) {
+            console.log('Found old tasks to migrate:', result.tasks);
+            
+            // Create a new home tab with the old tasks
+            const homeId = 'home_' + Date.now();
+            tabs[homeId] = { name: 'Home', tasks: result.tasks };
+            
+            console.log('Successfully migrated old tasks to new Home tab');
+        }
+    } catch (error) {
+        console.log('No old tasks to migrate or error during migration:', error);
+    }
+}
+
+// Context menu functions
+function showContextMenu(event, tabElement, tabId) {
+    contextMenuTarget = { element: tabElement, id: tabId };
+    
+    contextMenu.style.display = 'block';
+    contextMenu.style.left = event.pageX + 'px';
+    contextMenu.style.top = event.pageY + 'px';
+    
+    // Adjust position if menu goes off screen
+    const menuRect = contextMenu.getBoundingClientRect();
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    
+    if (menuRect.right > windowWidth) {
+        contextMenu.style.left = (event.pageX - menuRect.width) + 'px';
+    }
+    
+    if (menuRect.bottom > windowHeight) {
+        contextMenu.style.top = (event.pageY - menuRect.height) + 'px';
+    }
+}
+
+function hideContextMenu() {
+    contextMenu.style.display = 'none';
+    contextMenuTarget = null;
+}
+
+function deleteTab(tabId) {
+    // Remove from DOM
+    const tabElement = document.querySelector(`[data-tab-id="${tabId}"]`);
+    if (tabElement) {
+        tabElement.remove();
+    }
+    
+    // Remove from tabs object
+    delete tabs[tabId];
+    
+    // If we're deleting the current tab, we need to switch to another
+    if (currentTabId === tabId) {
+        // Try to switch to the first available tab
+        const remainingTabIds = Object.keys(tabs);
+        if (remainingTabIds.length > 0) {
+            switchToTab(remainingTabIds[0]);
+        } else {
+            currentTabId = null;
+        }
+    }
+    
+    // Ensure we always have at least one tab (create Home if needed)
+    ensureHomeTabExists();
+    
+    // Save changes
+    saveTabs();
+}
+
+function clearTabTasks(tabId) {
+    if (tabs[tabId]) {
+        tabs[tabId].tasks = [];
+        
+        // If it's the current tab, also clear the UI
+        if (currentTabId === tabId) {
+            taskList.innerHTML = '';
+        }
+        
+        saveTabs();
+    }
+}
+
+// Add tab button event
+// Add tab button event
+addTaskBtn.addEventListener('click', addNewTab);
+
+// Context menu event listeners
+contextRename.addEventListener('click', () => {
+    if (contextMenuTarget) {
+        hideContextMenu();
+        startTabRename(contextMenuTarget.element, contextMenuTarget.id);
+    }
+});
+
+contextClear.addEventListener('click', () => {
+    if (contextMenuTarget) {
+        clearTabTasks(contextMenuTarget.id);
+        hideContextMenu();
+    }
+});
+
+contextDelete.addEventListener('click', () => {
+    if (contextMenuTarget) {
+        deleteTab(contextMenuTarget.id);
+        hideContextMenu();
+    }
+});
+
+// Hide context menu when clicking elsewhere
+document.addEventListener('click', (e) => {
+    if (!contextMenu.contains(e.target)) {
+        hideContextMenu();
+    }
+});
+
+// Hide context menu on escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        hideContextMenu();
+    }
+});
+
+// Debounce object to prevent rapid clicks
+const toggleDebounce = new Map();
 
 
 // Function to collect all tasks from the DOM and convert to JSON
@@ -36,48 +443,27 @@ function collectTasksAsJSON() {
     return tasks;
 }
 
-// Function to save tasks (only saves, doesn't reload)
+// Function to save tasks (saves current tab's tasks to the tab system)
 async function saveTasks() {
-    const tasks = collectTasksAsJSON();
-    try {
-        const result = await ipcRenderer.invoke('save-tasks', tasks);
-        if (result.success) {
-            console.log('Tasks saved successfully');
-        } else {
-            console.error('Failed to save tasks:', result.error);
-        }
-    } catch (error) {
-        console.error('Error saving tasks:', error);
-    }
+    // Save tasks to current tab first
+    saveCurrentTabTasks();
+    
+    // Save the entire tab system (which includes all tasks)
+    saveTabs();
 }
 
 // Function to load tasks on startup
 async function loadTasks() {
-    try {
-        const result = await ipcRenderer.invoke('load-tasks');
-        if (result.success && result.tasks.length > 0) {
-            // Clear existing tasks
-            taskList.innerHTML = '';
-            
-            // Sort tasks by order and recreate them
-            result.tasks.sort((a, b) => a.order - b.order).forEach(task => {
-                createTaskFromData(task);
-            });
-            
-            console.log('Tasks loaded successfully');
-        }
-        
-        await new Promise(resolve);
-        
-    } catch (error) {
-        console.error('Error loading tasks:', error);
-    }
+    // Instead of loading from file, load the current tab's tasks
+    loadTabTasks(currentTabId);
+    loaded = true;
 }
 
 // Function to create a task element from saved data
 function createTaskFromData(taskData) {
     const taskDiv = document.createElement('div');
     taskDiv.className = 'task';
+    taskDiv.dataset.taskId = taskData.id || Date.now() + Math.random();
     
     // Add completed class if task was completed
     if (taskData.completed) {
@@ -127,16 +513,19 @@ function createTaskFromData(taskData) {
 }
 
 // Listen for save request from main process
-ipcRenderer.on('request-tasks-for-save', () => {
+ipcRenderer.on('request-data-for-save', () => {
+    // Save both tasks and tabs
     saveTasks();
+    saveTabs();
 });
 
 // Function to add a new task
 function doAddTask() {
-    const taskText = taskInput.value;
+    const taskText = quickAddInput.value.trim();
     if (taskText && taskText.trim() !== '') {
         const taskDiv = document.createElement('div');
         taskDiv.className = 'task';
+        taskDiv.dataset.taskId = Date.now() + Math.random();
 
         // checkbox first
         const checkbox = document.createElement('input');
@@ -178,21 +567,21 @@ function doAddTask() {
         });
 
         taskList.appendChild(taskDiv);
-        taskInput.value = '';
+        quickAddInput.value = '';
         
-        // Hide modal and show add button
-        taskModal.style.display = 'none';
-        addTaskBtn.style.display = 'block';
-        
-        // Save tasks after adding
-        //saveTasks();
+        // Tasks will be saved when app closes
     }
 }
 
 // Load tasks when the app starts
 document.addEventListener('DOMContentLoaded', async () => {   
-    console.log('DOM loaded, loading tasks...');
-    await loadTasks();
+    console.log('DOM loaded, loading tabs...');
+    await loadTabs(); // Load tabs first (now async)
+    console.log('Tabs loaded, current tabs:', tabs);
+    console.log('Current tab ID:', currentTabId);
+    
+    // The loadTabs function will handle tab switching and ensuring we have tabs
+    
     console.log('Tasks loaded, initializing Sortable...');
     Sortable.create(taskList, {
         animation: 240,
@@ -207,19 +596,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     ipcRenderer.send('renderer-ready');
 });
 
-addTaskBtn.addEventListener('click', () => {
-    console.log('Add new task button pressed');
-    taskInput.value = '';
-    taskModal.style.display = 'block';
-    addTaskBtn.style.display = 'none';
-    taskInput.focus();
-});
-
-// Cancel button functionality
-taskCancelBtn.addEventListener('click', () => {
-    taskModal.style.display = 'none';
-    addTaskBtn.style.display = 'block';
-    taskInput.value = '';
+// Quick add input functionality
+quickAddInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        doAddTask();
+    }
 });
 
 // Modal buttons
@@ -260,24 +642,21 @@ document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
 });
 
-// Handle task submission
-taskSubmitBtn.addEventListener('click', doAddTask);
-
 // Allow Enter key to submit
 document.addEventListener('keydown', (e) => {
+    // Don't interfere with input elements
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+    }
+    
     switch (e.key) {
         case 'Enter':
-            if (taskModal.style.display === 'block') {
-                doAddTask();
-            } else if (editModal.style.display === 'flex') {
+            if (editModal.style.display === 'flex') {
                 hideEditModal(); // Auto-save and close
             }
             break;
         case 'Escape':
-            if (taskModal.style.display === 'block') {
-                taskModal.style.display = 'none';
-                addTaskBtn.style.display = 'block';
-            } else if (editModal.style.display === 'flex') {
+            if (editModal.style.display === 'flex') {
                 hideEditModal(); // Auto-save and close
             }
             break;
@@ -286,12 +665,6 @@ document.addEventListener('keydown', (e) => {
 
 // Edit modal functions
 function showEditModal(taskDiv, taskTextSpan) {
-    // Close add task modal if it's open
-    if (taskModal.style.display === 'block') {
-        taskModal.style.display = 'none';
-        addTaskBtn.style.display = 'block';
-    }
-    
     currentEditTask = { taskDiv, taskTextSpan };
     originalTaskText = taskTextSpan.textContent;
     editInput.value = originalTaskText;
@@ -329,7 +702,7 @@ function hideEditModal() {
         const newText = editInput.value.trim();
         if (newText) {
             currentEditTask.taskTextSpan.textContent = newText;
-            //saveTasks(); // Save after editing
+            // Tasks will be saved when app closes
         }
     }
     editModal.style.display = 'none';
@@ -341,7 +714,7 @@ function hideEditModal() {
 function deleteTask() {
     if (currentEditTask) {
         currentEditTask.taskDiv.remove();
-        //saveTasks(); // Save after deletion
+        // Tasks will be saved when app closes
         editModal.style.display = 'none';
         editModalContent.classList.remove('modified');
         currentEditTask = null;
@@ -350,22 +723,33 @@ function deleteTask() {
 }
 
 function toggleTaskCompletion(taskDiv, checkbox) {
+    // Get unique ID for this task div
+    const taskId = taskDiv.dataset.taskId || taskDiv.outerHTML;
+    
+    // Clear any existing timeout for this task
+    if (toggleDebounce.has(taskId)) {
+        clearTimeout(toggleDebounce.get(taskId));
+    }
+    
+    // Always sync visual state with checkbox state immediately
+    taskDiv.classList.remove('completed', 'completing');
+    
     if (checkbox.checked) {
         // Start the completion animation sequence
         taskDiv.classList.add('completing');
         
-        // After the pop animation, add the completed state
-        setTimeout(() => {
-            taskDiv.classList.remove('completing');
-            taskDiv.classList.add('completed');
+        // Set timeout for the completion animation
+        const timeoutId = setTimeout(() => {
+            // Double-check the checkbox state before applying final styling
+            if (checkbox.checked) {
+                taskDiv.classList.remove('completing');
+                taskDiv.classList.add('completed');
+            }
+            toggleDebounce.delete(taskId);
         }, 300);
         
-    } else {
-        // Remove completed state when unchecked
-        taskDiv.classList.remove('completed');
-        taskDiv.classList.remove('completing');
+        toggleDebounce.set(taskId, timeoutId);
     }
     
-    // Save tasks after completion state change
-    //saveTasks();
+    // Tasks will be saved when app closes
 }

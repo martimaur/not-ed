@@ -6,8 +6,9 @@ try {
   require('electron-reloader')(module)
 } catch (_) {}
 
-// Path to store tasks data
+// Paths to store data
 const tasksFilePath = path.join(__dirname, 'tasks.json')
+const tabsFilePath = path.join(__dirname, 'tabs.json')
 
 let myWindow;
 
@@ -20,14 +21,15 @@ app.whenReady().then(() => {
             contextIsolation: false,
             webSecurity: false
         },
-        frame: true, // use for frameless window
+        frame: false, // Frameless window for custom title bar
         transparent: false,
         resizable: true,
         minWidth: 800,
         minHeight: 600,
         show: false, // Don't show window until ready
         backgroundColor: '#1e1e1e', // Match your dark theme
-        titleBarStyle: 'default'
+        titleBarStyle: 'hidden',
+        icon: path.join(__dirname, 'assets', 'notedLogo.svg') // Add your logo icon
     });
 
     // Set up IPC handlers for window controls
@@ -79,14 +81,44 @@ app.whenReady().then(() => {
         }
     });
 
-    // Handle window close event to save tasks
+    // IPC handler for saving tabs
+    ipcMain.handle('save-tabs', async (event, tabs) => {
+        try {
+            await fs.promises.writeFile(tabsFilePath, JSON.stringify(tabs, null, 2));
+            console.log('Tabs saved successfully to:', tabsFilePath);
+            return { success: true };
+        } catch (error) {
+            console.error('Error saving tabs:', error);
+            return { success: false, error: error.message };
+        }
+    });
+
+    // IPC handler for loading tabs
+    ipcMain.handle('load-tabs', async () => {
+        try {
+            if (fs.existsSync(tabsFilePath)) {
+                const data = await fs.promises.readFile(tabsFilePath, 'utf8');
+                const tabs = JSON.parse(data);
+                console.log('Tabs loaded successfully from:', tabsFilePath);
+                return { success: true, tabs };
+            } else {
+                console.log('No tabs file found, starting with empty tabs');
+                return { success: true, tabs: {} };
+            }
+        } catch (error) {
+            console.error('Error loading tabs:', error);
+            return { success: false, error: error.message };
+        }
+    });
+
+    // Handle window close event to save data
     myWindow.on('close', async (event) => {
         // Prevent immediate close
         event.preventDefault();
         
-        // Request tasks from renderer and save them
+        // Request data from renderer and save them
         try {
-            myWindow.webContents.send('request-tasks-for-save');
+            myWindow.webContents.send('request-data-for-save');
             
             // Wait a bit for the renderer to respond
             setTimeout(() => {
