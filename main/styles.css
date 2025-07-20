@@ -258,6 +258,41 @@ body {
     color: var(--accent-color);
 }
 
+/* Tab drag and drop styles */
+.tab.dragging {
+    opacity: 0.5;
+    transform: rotate(3deg);
+    z-index: 1000;
+}
+
+.tab.drop-indicator::after {
+    content: '';
+    position: absolute;
+    right: -5px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 25px;
+    width: 4px;
+    background: var(--accent-color);
+    border-radius: 2px;
+    z-index: 10;
+    box-shadow: 0 0 6px var(--accent-color);
+}
+
+.tab.drop-indicator-left::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 20px;
+    width: 3px;
+    background: var(--accent-color);
+    border-radius: 2px;
+    z-index: 10;
+    box-shadow: 0 0 6px var(--accent-color);
+}
+
 /* Main content area */
 main {
     padding-top: 92px;

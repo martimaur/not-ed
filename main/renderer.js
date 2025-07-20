@@ -107,6 +107,7 @@ function createTab(id, name) {
     const tab = document.createElement('div');
     tab.className = 'tab';
     tab.setAttribute('data-tab-id', id);
+    tab.draggable = true; // Make tab draggable
     
     tab.innerHTML = `
         <span class="tab-name">${name}</span>
@@ -131,7 +132,111 @@ function createTab(id, name) {
         showContextMenu(e, tab, id);
     });
     
+    // Add drag and drop events
+    tab.addEventListener('dragstart', handleTabDragStart);
+    tab.addEventListener('dragover', handleTabDragOver);
+    tab.addEventListener('drop', handleTabDrop);
+    tab.addEventListener('dragend', handleTabDragEnd);
+    
     return tab;
+}
+
+// Drag and drop variables
+let draggedTab = null;
+
+// Drag and drop handlers for tab reordering
+function handleTabDragStart(e) {
+    draggedTab = e.target;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', draggedTab.outerHTML);
+    draggedTab.classList.add('dragging');
+}
+
+function handleTabDragOver(e) {
+    if (e.preventDefault) {
+        e.preventDefault();
+    }
+    e.dataTransfer.dropEffect = 'move';
+    
+    const targetTab = e.currentTarget;
+    if (targetTab !== draggedTab && targetTab.classList.contains('tab')) {
+        // Clear all existing drag indicators from all tabs
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.classList.remove('drop-indicator', 'drop-indicator-left');
+        });
+        
+        const rect = targetTab.getBoundingClientRect();
+        const midpoint = rect.left + rect.width / 2;
+        
+        if (e.clientX < midpoint) {
+            // Dropping before this tab
+            const prevTab = targetTab.previousElementSibling;
+            if (prevTab && prevTab.classList.contains('tab')) {
+                // Show indicator on the right of the previous tab
+                prevTab.classList.add('drop-indicator');
+            } else {
+                // First tab - show indicator on the left of current tab
+                targetTab.classList.add('drop-indicator-left');
+            }
+        } else {
+            // Dropping after this tab - show indicator on the right of this tab
+            targetTab.classList.add('drop-indicator');
+        }
+    }
+    
+    return false;
+}
+
+function handleTabDrop(e) {
+    if (e.stopPropagation) {
+        e.stopPropagation();
+    }
+    
+    const targetTab = e.currentTarget;
+    if (draggedTab !== targetTab && targetTab.classList.contains('tab')) {
+        const rect = targetTab.getBoundingClientRect();
+        const midpoint = rect.left + rect.width / 2;
+        
+        if (e.clientX < midpoint) {
+            // Insert before target
+            tabContainer.insertBefore(draggedTab, targetTab);
+        } else {
+            // Insert after target
+            tabContainer.insertBefore(draggedTab, targetTab.nextSibling);
+        }
+        
+        // Update tab order in data structure
+        updateTabOrder();
+    }
+    
+    return false;
+}
+
+function handleTabDragEnd(e) {
+    // Clean up drag classes
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('dragging', 'drop-indicator', 'drop-indicator-left');
+    });
+    draggedTab = null;
+}
+
+function updateTabOrder() {
+    // Get current DOM order of tabs
+    const tabElements = Array.from(tabContainer.querySelectorAll('.tab'));
+    const newTabOrder = {};
+    
+    // Rebuild tabs object in the new order
+    tabElements.forEach(tabElement => {
+        const tabId = tabElement.getAttribute('data-tab-id');
+        if (tabs[tabId]) {
+            newTabOrder[tabId] = tabs[tabId];
+        }
+    });
+    
+    // Update the tabs object
+    tabs = newTabOrder;
+    
+    console.log('Tab order updated:', Object.keys(tabs));
 }
 
 function switchToTab(tabId) {
