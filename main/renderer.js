@@ -534,6 +534,11 @@ document.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         hideContextMenu();
+        
+        // Also hide edit modal if it's open
+        if (editModal.style.display === 'flex') {
+            hideEditModal();
+        }
     }
 });
 
@@ -579,9 +584,9 @@ function createTaskFromData(taskData) {
     taskDiv.className = 'task';
     taskDiv.dataset.taskId = taskData.id || Date.now() + Math.random();
     
-    // Add completed class if task was completed
+    // Add completed class if task was completed (static, no animation on load)
     if (taskData.completed) {
-        taskDiv.classList.add('completed');
+        taskDiv.classList.add('completed-static');
     }
 
     // checkbox first
@@ -846,7 +851,7 @@ function toggleTaskCompletion(taskDiv, checkbox) {
     }
     
     // Always sync visual state with checkbox state immediately
-    taskDiv.classList.remove('completed', 'completing');
+    taskDiv.classList.remove('completed', 'completed-static', 'completing');
     
     if (checkbox.checked) {
         // Start the completion animation sequence
