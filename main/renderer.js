@@ -89,8 +89,12 @@ function ensureHomeTabExists() {
         // Switch to it
         switchToTab(homeId);
         
-        // Save the new tab structure
-        saveTabs();
+        // Auto-focus into renaming
+        setTimeout(() => {
+            startTabRename(homeTab, homeId);
+        }, 50);
+        
+        // Don't save here - will be saved when app closes
         
         return homeId;
     }
@@ -190,22 +194,32 @@ function startTabRename(tabElement, tabId) {
         if (newName && newName !== nameSpan.textContent) {
             nameSpan.textContent = newName;
             tabs[tabId].name = newName;
-            saveTabs();
+            // will be saved when app closes
         }
         nameInput.style.display = 'none';
         nameSpan.style.display = 'block';
+        
+        // Remove event listeners
+        nameInput.removeEventListener('blur', blurHandler);
+        nameInput.removeEventListener('keydown', keydownHandler);
     }
     
-    nameInput.addEventListener('blur', finishRename, { once: true });
-    nameInput.addEventListener('keydown', (e) => {
+    function blurHandler() {
+        finishRename();
+    }
+    
+    function keydownHandler(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
-            nameInput.blur();
+            finishRename();
         } else if (e.key === 'Escape') {
             nameInput.value = nameSpan.textContent;
-            nameInput.blur();
+            finishRename();
         }
-    }, { once: true });
+    }
+    
+    nameInput.addEventListener('blur', blurHandler);
+    nameInput.addEventListener('keydown', keydownHandler);
 }
 
 function addNewTab() {
@@ -222,12 +236,9 @@ function addNewTab() {
     switchToTab(id);
     
     // Immediately start renaming the tab
-    setTimeout(() => {
-        startTabRename(newTab, id);
-    }, 50);
+    startTabRename(newTab, id);
     
-    // Save tabs
-    saveTabs();
+    // Don't save here - will be saved when app closes
 }
 
 function saveTabs() {
@@ -366,8 +377,7 @@ function deleteTab(tabId) {
     // Ensure we always have at least one tab (create Home if needed)
     ensureHomeTabExists();
     
-    // Save changes
-    saveTabs();
+    // Don't save here - will be saved when app closes
 }
 
 function clearTabTasks(tabId) {
@@ -379,19 +389,18 @@ function clearTabTasks(tabId) {
             taskList.innerHTML = '';
         }
         
-        saveTabs();
+        // Don't save here - will be saved when app closes
     }
 }
 
-// Add tab button event
 // Add tab button event
 addTaskBtn.addEventListener('click', addNewTab);
 
 // Context menu event listeners
 contextRename.addEventListener('click', () => {
     if (contextMenuTarget) {
-        hideContextMenu();
         startTabRename(contextMenuTarget.element, contextMenuTarget.id);
+        hideContextMenu();
     }
 });
 

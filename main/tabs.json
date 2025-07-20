@@ -1,40 +1,27 @@
 {
-  "home_1752967670865": {
+  "home_1752971371386": {
     "name": "Home",
     "tasks": [
       {
         "id": 1,
-        "text": "ahhaa",
+        "text": "HEHE",
         "completed": false,
         "order": 0
       }
     ]
   },
-  "tab_1752967674981": {
-    "name": "Epic shit",
-    "tasks": [
-      {
-        "id": 1,
-        "text": "coool af",
-        "completed": false,
-        "order": 0
-      }
-    ]
+  "tab_1752971948491": {
+    "name": "Dont tell me",
+    "tasks": []
   },
-  "tab_1752967687138": {
-    "name": "Work",
+  "tab_1752971952554": {
+    "name": "ee",
     "tasks": [
       {
         "id": 1,
-        "text": "Pls work",
-        "completed": true,
-        "order": 0
-      },
-      {
-        "id": 2,
-        "text": "nah",
+        "text": "eeee",
         "completed": false,
-        "order": 1
+        "order": 0
       }
     ]
   }
