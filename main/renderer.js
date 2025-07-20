@@ -4,6 +4,7 @@ const { ipcRenderer } = require('electron');
 const minimizeBtn = document.getElementById('minimize-btn');
 const maximizeBtn = document.getElementById('maximize-btn');
 const closeBtn = document.getElementById('close-btn');
+const pinBtn = document.getElementById('pin-btn');
 const titleBar = document.getElementById('title-bar');
 
 // Window control event listeners
@@ -17,6 +18,28 @@ maximizeBtn.addEventListener('click', () => {
 
 closeBtn.addEventListener('click', () => {
     ipcRenderer.send('window-controls', 'close');
+});
+
+pinBtn.addEventListener('click', () => {
+    ipcRenderer.send('window-controls', 'toggle-pin');
+});
+
+// Listen for pin state updates from main process
+ipcRenderer.on('pin-state-changed', (event, isPinned) => {
+    const pinIconUnpinned = pinBtn.querySelector('.pin-icon-unpinned');
+    const pinIconPinned = pinBtn.querySelector('.pin-icon-pinned');
+    
+    if (isPinned) {
+        pinBtn.classList.add('pinned');
+        pinBtn.title = 'Unpin window (disable always on top)';
+        pinIconUnpinned.style.display = 'none';
+        pinIconPinned.style.display = 'block';
+    } else {
+        pinBtn.classList.remove('pinned');
+        pinBtn.title = 'Pin window to stay on top';
+        pinIconUnpinned.style.display = 'block';
+        pinIconPinned.style.display = 'none';
+    }
 });
 
 // Title bar drag functionality with double-click to maximize

@@ -24,8 +24,8 @@ app.whenReady().then(() => {
         frame: false, // Frameless window for custom title bar
         transparent: false,
         resizable: true,
-        minWidth: 800,
-        minHeight: 600,
+        minWidth: 400,
+        minHeight: 300,
         show: false, // Don't show window until ready
         backgroundColor: '#1e1e1e', // Match your dark theme
         titleBarStyle: 'hidden',
@@ -47,6 +47,12 @@ app.whenReady().then(() => {
                 break;
             case 'close':
                 myWindow.close();
+                break;
+            case 'toggle-pin':
+                const isCurrentlyOnTop = myWindow.isAlwaysOnTop();
+                myWindow.setAlwaysOnTop(!isCurrentlyOnTop);
+                // Send the new state back to renderer
+                myWindow.webContents.send('pin-state-changed', !isCurrentlyOnTop);
                 break;
         }
     });

@@ -1,7 +1,7 @@
 /* Variables */
 :root {
     /* Colors */
-    --accent-color: #7662cf;;
+    --accent-color: #7662cf;
     --secondary-color: #4a4a4a;
     --text-color: #e5e5e5;
     --border-color: #666;
@@ -131,6 +131,26 @@ body {
     cursor: pointer;
     transition: background-color 0.2s ease;
     font-size: 10px;
+}
+
+.title-bar-control.pin:hover {
+    background: #404040;
+}
+
+.title-bar-control.pin.pinned {
+    background: var(--accent-color);
+}
+
+.title-bar-control.pin.pinned svg {
+    stroke: white !important;
+}
+
+.title-bar-control.pin.pinned svg path {
+    stroke: white !important;
+}
+
+.title-bar-control.pin.pinned:hover {
+    background: #5b3ba3;
 }
 
 .title-bar-control svg path {
