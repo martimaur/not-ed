@@ -62,7 +62,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 32px;
+    height: 35px;
     background: #2a2a2a;
     border-bottom: 1px solid var(--border-color);
     user-select: none;
@@ -92,7 +92,7 @@ body {
 }
 
 .title-bar-logo {
-    height: 24px;
+    height: 23px;
     width: auto;
     color: var(--accent-color);
     object-fit: contain;
@@ -100,6 +100,9 @@ body {
     -webkit-user-select: none;
     -webkit-user-drag: none;
     pointer-events: none;
+    display: flex;
+    align-items: center;
+    margin-top: -2px;
 }
 
 .title-bar-text {
@@ -162,12 +165,11 @@ body {
 /* Tab Bar */
 .tab-bar {
     position: fixed;
-    top: 32px;
+    top: 40px;
     left: 0;
     right: 0;
     height: 40px;
-    background: #2a2a2a;
-    border-bottom: 1px solid var(--border-color);
+    background: transparent;
     z-index: 999;
     display: flex;
     align-items: center;
@@ -177,7 +179,7 @@ body {
     display: flex;
     align-items: center;
     height: 100%;
-    padding: 0 12px;
+    padding: 20;
     gap: 4px;
     overflow-x: auto;
     scrollbar-width: none;
@@ -276,7 +278,7 @@ body {
     background: var(--accent-color);
     border-radius: 2px;
     z-index: 10;
-    box-shadow: 0 0 6px var(--accent-color);
+    box-shadow: 0 0 6px var(--accent-color);;
 }
 
 .tab.drop-indicator-left::before {
