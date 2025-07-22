@@ -373,6 +373,8 @@ main {
 /* Task list container */
 .task-list {
     max-width: 600px;
+    flex-grow: 1;
+    /*min-width: 300px;*/
     margin: 0 0;
 }
 
@@ -473,6 +475,43 @@ main {
     text-overflow: ellipsis;
     white-space: nowrap;
     min-width: 0;
+}
+
+/* Task content container */
+.task-content {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-width: 0;
+    gap: 4px;
+}
+
+.task-due-date {
+    font-size: 12px;
+    color: #acacac;
+    font-weight: 400;
+    white-space: nowrap;
+    opacity: 0.8;
+}
+
+.task-due-date.overdue {
+    color: #ff6b6b;
+    font-weight: 500;
+}
+
+.task-due-date.due-soon {
+    color: var(--accent-color);
+    font-weight: 500;
+}
+
+.task-due-date.due-today {
+    color: #ffa500;
+    font-weight: 500;
+}
+
+.task-due-date.completed {
+    color: #22c55e;
+    font-weight: 500;   
 }
 
 .task-checkbox {
@@ -692,6 +731,262 @@ main {
 
 .modal-body {
     padding: 20px;
+}
+
+/* Due Date Section */
+.due-date-section {
+    margin-top: 20px;
+}
+
+.due-date-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-color);
+    margin-bottom: 8px;
+}
+
+.due-date-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Date Time Picker Container */
+.date-time-picker {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.date-picker-section,
+.time-picker-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.picker-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.date-input {
+    background: #1e1e1e;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: var(--text-color);
+    font-size: 14px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    outline: none;
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.date-input:focus {
+    border-color: var(--accent-color);
+}
+
+.date-input::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
+
+/* Time Picker */
+.time-picker {
+    position: relative;
+}
+
+.time-display {
+    background: #1e1e1e;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: var(--text-color);
+    font-size: 14px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    user-select: none;
+    min-height: 19px;
+}
+
+.time-display:hover {
+    border-color: var(--accent-color);
+}
+
+.time-display.active {
+    border-color: var(--accent-color);
+}
+
+.time-display .hour,
+.time-display .minute {
+    font-weight: 500;
+    min-width: 20px;
+    text-align: center;
+}
+
+.time-display .separator {
+    color: #888;
+    font-weight: 400;
+}
+
+.time-display .period {
+    font-size: 12px;
+    color: #888;
+    margin-left: 4px;
+    font-weight: 500;
+}
+
+/* Time Picker Controls */
+.time-picker-controls {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #2a2a2a;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    margin-top: 4px;
+    padding: 16px;
+}
+
+.time-wheel-container {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.time-wheel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.wheel-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.wheel-items {
+    height: 120px;
+    overflow-y: auto;
+    border: 1px solid #444;
+    border-radius: 6px;
+    width: 100%;
+    position: relative;
+}
+
+.wheel-items::-webkit-scrollbar {
+    width: 4px;
+}
+
+.wheel-items::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.wheel-items::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 2px;
+}
+
+.wheel-item {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #333;
+}
+
+.wheel-item:last-child {
+    border-bottom: none;
+}
+
+.wheel-item:hover {
+    background: #3a3a3a;
+}
+
+.wheel-item.selected {
+    background: var(--accent-color);
+    color: white;
+    font-weight: 500;
+}
+
+/* Time Picker Actions */
+.time-picker-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.time-action-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+;;;    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.time-action-btn.secondary {
+    background: transparent;
+    color: #888;
+    border: 1px solid #555;
+}
+
+.time-action-btn.secondary:hover {
+    background: #3a3a3a;
+    color: var(--text-color);
+}
+
+.time-action-btn.primary {
+    background: var(--accent-color);
+    color: white;
+}
+
+.time-action-btn.primary:hover {
+    background: #5b3ba3;
+}
+
+.clear-due-btn {
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px solid #666;
+    border-radius: 4px;
+    color: #888;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    align-self: flex-start;
+}
+
+.clear-due-btn:hover {
+    background: #ff4444;
+    border-color: #ff4444;
+    color: white;
 }
 
 .edit-task-input {

@@ -76,9 +76,24 @@ const editInput = document.getElementById('edit-input');
 const editDeleteBtn = document.getElementById('edit-delete-btn');
 const editCloseBtn = document.getElementById('edit-close-btn');
 
+// Due date elements
+const dateInput = document.getElementById('date-input');
+const timeDisplay = document.getElementById('time-display');
+const timePickerControls = document.getElementById('time-picker-controls');
+const hourDisplay = document.getElementById('hour-display');
+const minuteDisplay = document.getElementById('minute-display');
+const periodDisplay = document.getElementById('period-display');
+const hourWheel = document.getElementById('hour-items');
+const minuteWheel = document.getElementById('minute-items');
+const periodWheel = document.getElementById('period-items');
+const timePickerCancel = document.getElementById('time-picker-cancel');
+const timePickerOk = document.getElementById('time-picker-ok');
+const clearDueBtn = document.getElementById('clear-due-btn');
+
 // Current task being edited
 let currentEditTask = null;
 let originalTaskText = '';
+let originalDueDate = null;
 let loaded = false;
 
 // Tab management
@@ -575,12 +590,19 @@ function collectTasksAsJSON() {
     const tasks = Array.from(taskElements).map((taskDiv, index) => {
         const checkbox = taskDiv.querySelector('.task-checkbox');
         const textSpan = taskDiv.querySelector('.task-text');
-        return {
+        const taskData = {
             id: index + 1,
             text: textSpan.textContent.trim(),
             completed: checkbox.checked,
             order: index
         };
+        
+        // Add due date if it exists
+        if (taskDiv.dataset.dueDate) {
+            taskData.dueDate = taskDiv.dataset.dueDate;
+        }
+        
+        return taskData;
     });
     return tasks;
 }
@@ -601,11 +623,62 @@ async function loadTasks() {
     loaded = true;
 }
 
+// Helper function to format due date for display
+function formatDueDate(dueDateString) {
+    if (!dueDateString) return '';
+    
+    const dueDate = new Date(dueDateString);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const due = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+    
+    const diffDays = Math.floor((due - today) / (24 * 60 * 60 * 1000));
+    const timeStr = dueDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    if (diffDays === 0) {
+        return `Today ${timeStr}`;
+    } else if (diffDays === 1) {
+        return `Tomorrow ${timeStr}`;
+    } else if (diffDays === -1) {
+        return `Yesterday ${timeStr}`;
+    } else if (diffDays > 1 && diffDays <= 7) {
+        return `${dueDate.toLocaleDateString([], { weekday: 'short' })} ${timeStr}`;
+    } else if (diffDays < -1 && diffDays >= -7) {
+        return `${Math.abs(diffDays)} days ago ${timeStr}`;
+    } else {
+        return `${dueDate.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${timeStr}`;
+    }
+}
+
+// Helper function to get due date status class
+function getDueDateClass(dueDateString) {
+    if (!dueDateString) return '';
+    
+    const dueDate = new Date(dueDateString);
+    const now = new Date();
+    const diffHours = (dueDate - now) / (1000 * 60 * 60);
+    
+    if (diffHours < 0) {
+        return 'overdue';
+    } else if (diffHours <= 5) {
+        return 'due-today';
+    } else if (diffHours <= 48) {
+        return 'due-soon';
+    }
+    return '';
+}
+
 // Function to create a task element from saved data
 function createTaskFromData(taskData) {
     const taskDiv = document.createElement('div');
     taskDiv.className = 'task';
     taskDiv.dataset.taskId = taskData.id || Date.now() + Math.random();
+    
+    // Store due date in dataset if it exists
+    if (taskData.dueDate) {
+        taskDiv.dataset.dueDate = taskData.dueDate;
+    }
     
     // Add completed class if task was completed (static, no animation on load)
     if (taskData.completed) {
@@ -620,11 +693,37 @@ function createTaskFromData(taskData) {
     checkbox.title = 'Mark completed';
     taskDiv.appendChild(checkbox);
 
-    // text second
+    // Create task content container
+    const taskContent = document.createElement('div');
+    taskContent.className = 'task-content';
+    
+    // text in content container
     const span = document.createElement('span');
     span.className = 'task-text';
     span.textContent = taskData.text;
-    taskDiv.appendChild(span);
+    taskContent.appendChild(span);
+    
+    // Add due date display if exists
+    if (taskData.dueDate) {
+        const dueDateSpan = document.createElement('span');
+        dueDateSpan.className = 'task-due-date';
+        dueDateSpan.textContent = formatDueDate(taskData.dueDate);
+        
+        // Add status classes based on due date
+        const dueClass = getDueDateClass(taskData.dueDate);
+        if (dueClass) {
+            dueDateSpan.classList.add(dueClass);
+        }
+        
+        // Add completed class if task is completed
+        if (taskData.completed) {
+            dueDateSpan.classList.add('completed');
+        }
+        
+        taskContent.appendChild(dueDateSpan);
+    }
+    
+    taskDiv.appendChild(taskContent);
 
     // edit button third
     const editBtn = document.createElement('button');
@@ -677,10 +776,15 @@ function doAddTask() {
         taskDiv.appendChild(checkbox);
 
         // text second
+        const taskContent = document.createElement('div');
+        taskContent.className = 'task-content';
+        
         const span = document.createElement('span');
         span.className = 'task-text';
         span.textContent = taskText;
-        taskDiv.appendChild(span);
+        taskContent.appendChild(span);
+        
+        taskDiv.appendChild(taskContent);
 
         // edit button third
         const editBtn = document.createElement('button');
@@ -760,6 +864,194 @@ editInput.addEventListener('input', () => {
     checkForChanges();
 });
 
+// Time picker variables
+let selectedHour = 12;
+let selectedMinute = 0;
+let selectedPeriod = 'PM';
+let isTimePickerOpen = false;
+
+// Variables to store previous values for cancel functionality
+let previousSelectedHour = 12;
+let previousSelectedMinute = 0;
+let previousSelectedPeriod = 'PM';
+let previousDateValue = '';
+let taskHasDateSet = false;
+
+// Initialize time picker wheels
+function initializeTimePickerWheels() {
+    // Hours (1-12)
+    hourWheel.innerHTML = '';
+    for (let i = 1; i <= 12; i++) {
+        const item = document.createElement('div');
+        item.className = 'wheel-item';
+        item.dataset.value = i;
+        item.textContent = i.toString().padStart(2, '0');
+        item.addEventListener('click', () => selectHour(i));
+        hourWheel.appendChild(item);
+    }
+    
+    // Minutes (0-59, step 5)
+    minuteWheel.innerHTML = '';
+    for (let i = 0; i < 60; i += 5) {
+        const item = document.createElement('div');
+        item.className = 'wheel-item';
+        item.dataset.value = i;
+        item.textContent = i.toString().padStart(2, '0');
+        item.addEventListener('click', () => selectMinute(i));
+        minuteWheel.appendChild(item);
+    }
+    
+    // Period items already in HTML, just add event listeners
+    periodWheel.querySelectorAll('.wheel-item').forEach(item => {
+        item.addEventListener('click', () => selectPeriod(item.dataset.value));
+    });
+}
+
+function selectHour(hour) {
+    selectedHour = hour;
+    updateWheelSelection(hourWheel, hour);
+    updateTimeDisplay();
+}
+
+function selectMinute(minute) {
+    selectedMinute = minute;
+    updateWheelSelection(minuteWheel, minute);
+    updateTimeDisplay();
+}
+
+function selectPeriod(period) {
+    selectedPeriod = period;
+    updateWheelSelection(periodWheel, period);
+    updateTimeDisplay();
+}
+
+function updateWheelSelection(wheel, value) {
+    wheel.querySelectorAll('.wheel-item').forEach(item => {
+        item.classList.remove('selected');
+        if (item.dataset.value == value) {
+            item.classList.add('selected');
+            item.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+    });
+}
+
+function updateTimeDisplay() {
+    hourDisplay.textContent = selectedHour.toString().padStart(2, '0');
+    minuteDisplay.textContent = selectedMinute.toString().padStart(2, '0');
+    periodDisplay.textContent = selectedPeriod;
+}
+
+function setTimeFromDate(date) {
+    if (!date) {
+        selectedHour = 12;
+        selectedMinute = 0;
+        selectedPeriod = 'PM';
+    } else {
+        const hours = date.getHours();
+        let minutes = Math.round(date.getMinutes() / 5) * 5; // Round to nearest 5 minutes
+        
+        // Handle minute overflow (when rounding gives us 60 minutes)
+        let adjustedHours = hours;
+        if (minutes >= 60) {
+            minutes = 0;
+            adjustedHours = hours + 1;
+        }
+        
+        selectedHour = adjustedHours === 0 ? 12 : adjustedHours > 12 ? adjustedHours - 12 : adjustedHours;
+        selectedMinute = minutes;
+        selectedPeriod = adjustedHours >= 12 ? 'PM' : 'AM';
+    }
+    updateTimeDisplay();
+    updateWheelSelection(hourWheel, selectedHour);
+    updateWheelSelection(minuteWheel, selectedMinute);
+    updateWheelSelection(periodWheel, selectedPeriod);
+}
+
+function getSelectedDateTime() {
+    const dateValue = dateInput.value;
+    if (!dateValue) return null;
+    
+    const date = new Date(dateValue);
+    let hours = selectedHour;
+    if (selectedPeriod === 'PM' && hours !== 12) hours += 12;
+    if (selectedPeriod === 'AM' && hours === 12) hours = 0;
+    
+    date.setHours(hours, selectedMinute, 0, 0);
+    return date;
+}
+
+// Time picker event listeners
+timeDisplay.addEventListener('click', () => {
+    if (isTimePickerOpen) {
+        closeTimePicker();
+    } else {
+        openTimePicker();
+    }
+});
+
+function openTimePicker() {
+    // Store previous values for cancel functionality
+    previousSelectedHour = selectedHour;
+    previousSelectedMinute = selectedMinute;
+    previousSelectedPeriod = selectedPeriod;
+    previousDateValue = dateInput.value;
+    
+    isTimePickerOpen = true;
+    timeDisplay.classList.add('active');
+    timePickerControls.style.display = 'block';
+    // Set initial selections
+    updateWheelSelection(hourWheel, selectedHour);
+    updateWheelSelection(minuteWheel, selectedMinute);
+    updateWheelSelection(periodWheel, selectedPeriod);
+}
+
+function closeTimePicker() {
+    isTimePickerOpen = false;
+    timeDisplay.classList.remove('active');
+    timePickerControls.style.display = 'none';
+}
+
+timePickerCancel.addEventListener('click', () => {
+    // Restore previous values
+    selectedHour = previousSelectedHour;
+    selectedMinute = previousSelectedMinute;
+    selectedPeriod = previousSelectedPeriod;
+    dateInput.value = previousDateValue;
+    updateTimeDisplay();
+    closeTimePicker();
+});
+
+timePickerOk.addEventListener('click', () => {
+    taskHasDateSet = true; // Mark that user has set a date/time
+    closeTimePicker();
+    checkForChanges();
+});
+
+// Date input change listener
+dateInput.addEventListener('change', () => {
+    taskHasDateSet = true; // Mark that user has set a date
+    checkForChanges();
+});
+
+// Clear due date button
+clearDueBtn.addEventListener('click', () => {
+    dateInput.value = '';
+    setTimeFromDate(null);
+    taskHasDateSet = false; // Reset flag when clearing
+    checkForChanges();
+});
+
+// Close time picker when clicking outside
+document.addEventListener('click', (e) => {
+    if (isTimePickerOpen && !e.target.closest('.time-picker')) {
+        closeTimePicker();
+    }
+});
+
+// Initialize time picker on load
+initializeTimePickerWheels();
+setTimeFromDate(null);
+
 // Variables to track mouse events for safer modal closing
 let mouseDownOutside = false;
 
@@ -809,7 +1101,30 @@ document.addEventListener('keydown', (e) => {
 function showEditModal(taskDiv, taskTextSpan) {
     currentEditTask = { taskDiv, taskTextSpan };
     originalTaskText = taskTextSpan.textContent;
+    originalDueDate = taskDiv.dataset.dueDate || null;
+    
     editInput.value = originalTaskText;
+    
+    // Set due date and time
+    if (originalDueDate) {
+        taskHasDateSet = true;
+        const dueDate = new Date(originalDueDate);
+        const year = dueDate.getFullYear();
+        const month = String(dueDate.getMonth() + 1).padStart(2, '0');
+        const day = String(dueDate.getDate()).padStart(2, '0');
+        dateInput.value = `${year}-${month}-${day}`;
+        setTimeFromDate(dueDate);
+    } else {
+        taskHasDateSet = false;
+        // Default to current date and time when no date is set
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        dateInput.value = `${year}-${month}-${day}`;
+        setTimeFromDate(now);
+    }
+    
     editModal.style.display = 'flex';
     editInput.focus();
     autoResizeTextarea(editInput);
@@ -825,8 +1140,15 @@ function checkForChanges() {
     const currentText = editInput.value.trim();
     const originalText = originalTaskText.trim();
     
-    // Check if there's actually a change
-    if (currentText !== originalText) {
+    // Get current due date
+    const currentDueDate = getSelectedDateTime();
+    const currentDueDateString = currentDueDate ? currentDueDate.toISOString() : null;
+    
+    // Check if there's a text change or due date change
+    const textChanged = currentText !== originalText;
+    const dueDateChanged = currentDueDateString !== originalDueDate;
+    
+    if (textChanged || dueDateChanged) {
         // Only show as modified if current text is not empty (has meaningful content)
         if (currentText !== '') {
             editModalContent.classList.add('modified');
@@ -838,19 +1160,77 @@ function checkForChanges() {
     }
 }
 
+function updateTaskDueDateDisplay(taskDiv, dueDate) {
+    const taskContent = taskDiv.querySelector('.task-content');
+    let dueDateSpan = taskContent.querySelector('.task-due-date');
+    
+    if (dueDate) {
+        if (!dueDateSpan) {
+            dueDateSpan = document.createElement('span');
+            dueDateSpan.className = 'task-due-date';
+            taskContent.appendChild(dueDateSpan);
+        }
+        
+        dueDateSpan.textContent = formatDueDate(dueDate.toISOString());
+        
+        // Update status classes
+        dueDateSpan.className = 'task-due-date';
+        const dueClass = getDueDateClass(dueDate.toISOString());
+        if (dueClass) {
+            dueDateSpan.classList.add(dueClass);
+        }
+        
+        // Add completed class if task is completed
+        if (taskDiv.classList.contains('completed') || taskDiv.classList.contains('completed-static')) {
+            dueDateSpan.classList.add('completed');
+        }
+    } else {
+        if (dueDateSpan) {
+            dueDateSpan.remove();
+        }
+    }
+}
+
 function hideEditModal() {
     // Auto-save when closing
     if (currentEditTask) {
         const newText = editInput.value.trim();
+        const newDueDate = getSelectedDateTime();
+        
         if (newText) {
             currentEditTask.taskTextSpan.textContent = newText;
+            
+            // Check if date/time has been modified from original state
+            const newDueDateString = newDueDate ? newDueDate.toISOString() : null;
+            const dateWasModified = newDueDateString !== originalDueDate;
+            
+            // Only update due date if it was originally set OR if the user has made changes
+            if (taskHasDateSet || dateWasModified) {
+                if (newDueDate) {
+                    currentEditTask.taskDiv.dataset.dueDate = newDueDate.toISOString();
+                } else {
+                    delete currentEditTask.taskDiv.dataset.dueDate;
+                }
+                
+                // Update due date display in task
+                updateTaskDueDateDisplay(currentEditTask.taskDiv, newDueDate);
+            }
+            
             // Tasks will be saved when app closes
         }
     }
+    
+    // Close time picker if open
+    if (isTimePickerOpen) {
+        closeTimePicker();
+    }
+    
     editModal.style.display = 'none';
     editModalContent.classList.remove('modified');
     currentEditTask = null;
     originalTaskText = '';
+    originalDueDate = null;
+    taskHasDateSet = false;
 }
 
 function deleteTask() {
@@ -861,6 +1241,8 @@ function deleteTask() {
         editModalContent.classList.remove('modified');
         currentEditTask = null;
         originalTaskText = '';
+        originalDueDate = null;
+        taskHasDateSet = false;
     }
 }
 
@@ -876,6 +1258,16 @@ function toggleTaskCompletion(taskDiv, checkbox) {
     // Always sync visual state with checkbox state immediately
     taskDiv.classList.remove('completed', 'completed-static', 'completing');
     
+    // Update due date display immediately for visual feedback
+    const dueDateSpan = taskDiv.querySelector('.task-due-date');
+    if (dueDateSpan) {
+        if (checkbox.checked) {
+            dueDateSpan.classList.add('completed');
+        } else {
+            dueDateSpan.classList.remove('completed');
+        }
+    }
+    
     if (checkbox.checked) {
         // Start the completion animation sequence
         taskDiv.classList.add('completing');
@@ -886,6 +1278,12 @@ function toggleTaskCompletion(taskDiv, checkbox) {
             if (checkbox.checked) {
                 taskDiv.classList.remove('completing');
                 taskDiv.classList.add('completed');
+                
+                // Ensure due date display is updated after animation
+                const dueDateSpan = taskDiv.querySelector('.task-due-date');
+                if (dueDateSpan) {
+                    dueDateSpan.classList.add('completed');
+                }
             }
             toggleDebounce.delete(taskId);
         }, 300);

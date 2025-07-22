@@ -83,6 +83,52 @@
       </div>
       <div class="modal-body">
         <textarea id="edit-input" class="edit-task-input" placeholder="Edit task name" rows="1"></textarea>
+        <div class="due-date-section">
+          <label for="due-date-input" class="due-date-label">Due Date & Time</label>
+          <div class="due-date-controls">
+            <div class="date-time-picker">
+              <div class="date-picker-section">
+                <label class="picker-label">Date</label>
+                <input type="date" id="date-input" class="date-input" />
+              </div>
+              <div class="time-picker-section">
+                <label class="picker-label">Time</label>
+                <div class="time-picker" id="time-picker">
+                  <div class="time-display" id="time-display">
+                    <span class="hour" id="hour-display">12</span>
+                    <span class="separator">:</span>
+                    <span class="minute" id="minute-display">00</span>
+                    <span class="period" id="period-display">PM</span>
+                  </div>
+                  <div class="time-picker-controls" id="time-picker-controls" style="display: none;">
+                    <div class="time-wheel-container">
+                      <div class="time-wheel" id="hour-wheel">
+                        <div class="wheel-label">Hour</div>
+                        <div class="wheel-items" id="hour-items"></div>
+                      </div>
+                      <div class="time-wheel" id="minute-wheel">
+                        <div class="wheel-label">Minute</div>
+                        <div class="wheel-items" id="minute-items"></div>
+                      </div>
+                      <div class="time-wheel" id="period-wheel">
+                        <div class="wheel-label">Period</div>
+                        <div class="wheel-items" id="period-items">
+                          <div class="wheel-item" data-value="AM">AM</div>
+                          <div class="wheel-item" data-value="PM">PM</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="time-picker-actions">
+                      <button type="button" id="time-picker-cancel" class="time-action-btn secondary">Cancel</button>
+                      <button type="button" id="time-picker-ok" class="time-action-btn primary">OK</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button type="button" id="clear-due-btn" class="clear-due-btn">Clear</button>
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
         <button id="edit-delete-btn" class="btn btn-delete">

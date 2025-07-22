@@ -1,113 +1,88 @@
 {
-  "tab_1752971948491": {
-    "name": "Dont tell me",
+  "home_1753192945829": {
+    "name": "Home",
     "tasks": [
       {
         "id": 1,
-        "text": "eaeaea",
-        "completed": true,
-        "order": 0
+        "text": "nahh",
+        "completed": false,
+        "order": 0,
+        "dueDate": "2025-07-22T18:45:00.000Z"
       },
       {
         "id": 2,
-        "text": "a",
+        "text": "e",
         "completed": false,
-        "order": 1
+        "order": 1,
+        "dueDate": "2025-07-31T14:45:00.000Z"
       },
       {
         "id": 3,
-        "text": "eaNAAAAAAAAAAAAEAE EAJEAJE KEE",
-        "completed": true,
+        "text": "eaea",
+        "completed": false,
         "order": 2
       },
       {
         "id": 4,
-        "text": "e",
+        "text": "ea",
         "completed": false,
         "order": 3
       },
       {
         "id": 5,
-        "text": "a",
+        "text": "NAHHHHHHHHHH",
         "completed": false,
-        "order": 4
+        "order": 4,
+        "dueDate": "2025-07-22T14:45:00.000Z"
       },
       {
         "id": 6,
-        "text": "ea",
+        "text": "eaea",
         "completed": false,
         "order": 5
       },
       {
         "id": 7,
-        "text": "e",
+        "text": "mah",
         "completed": false,
         "order": 6
       },
       {
         "id": 8,
-        "text": "a",
+        "text": "ok",
         "completed": false,
         "order": 7
       },
       {
         "id": 9,
-        "text": "e",
+        "text": "ahah",
         "completed": false,
         "order": 8
       },
       {
         "id": 10,
-        "text": "a",
+        "text": "eaeae",
         "completed": false,
         "order": 9
       },
       {
         "id": 11,
-        "text": "e",
+        "text": "eaea",
         "completed": false,
         "order": 10
-      },
-      {
-        "id": 12,
-        "text": "e",
-        "completed": false,
-        "order": 11
-      },
-      {
-        "id": 13,
-        "text": "ea",
-        "completed": false,
-        "order": 12
-      },
-      {
-        "id": 14,
-        "text": "ea",
-        "completed": false,
-        "order": 13
-      },
-      {
-        "id": 15,
-        "text": "e",
-        "completed": false,
-        "order": 14
-      },
-      {
-        "id": 16,
-        "text": "e",
-        "completed": false,
-        "order": 15
-      },
-      {
-        "id": 17,
-        "text": "majaahahahahha",
-        "completed": false,
-        "order": 16
       }
     ]
   },
-  "home_1752971371386": {
-    "name": "Home",
-    "tasks": []
+  "tab_1753192957928": {
+    "name": "EHEH",
+    "tasks": [
+      {
+        "id": 1,
+        "text": "Finish ts",
+        "completed": false,
+        "order": 0,
+        "dueDate": "2025-07-22T16:00:00.000Z"
+      }
+    ]
   }
 }
