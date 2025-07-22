@@ -669,6 +669,196 @@ function getDueDateClass(dueDateString) {
     return '';
 }
 
+// Smart text parsing for deadline detection
+function parseSmartDeadline(text) {
+    const now = new Date();
+    let parsedDate = null;
+    let matchedText = '';
+    let startIndex = -1;
+    let endIndex = -1;
+    
+    // Convert text to lowercase for matching
+    const lowerText = text.toLowerCase();
+    
+    // Time patterns
+    const timePatterns = [
+        // 24-hour format: 17h, 15:30, 23h45
+        { 
+            regex: /\b(\d{1,2})h(\d{2})?\b/g, 
+            handler: (match, hour, minute) => ({ hour: parseInt(hour), minute: parseInt(minute || '0') }) 
+        },
+        // 24-hour with colon: 15:30, 9:45
+        { 
+            regex: /\b(\d{1,2}):(\d{2})\b/g, 
+            handler: (match, hour, minute) => ({ hour: parseInt(hour), minute: parseInt(minute) }) 
+        },
+        // 12-hour format: 5 PM, 3 AM, 11h55 pm
+        { 
+            regex: /\b(\d{1,2})(?:h(\d{2}))?\s*(pm|am)\b/g, 
+            handler: (match, hour, minute, period) => {
+                let h = parseInt(hour);
+                if (period === 'pm' && h !== 12) h += 12;
+                if (period === 'am' && h === 12) h = 0;
+                return { hour: h, minute: parseInt(minute || '0') };
+            }
+        },
+        // Simple hour: "at 5", "at 17"
+        { 
+            regex: /\bat\s+(\d{1,2})\b/g, 
+            handler: (match, hour) => {
+                let h = parseInt(hour);
+                // If hour is 1-12, assume PM for afternoon/evening times
+                if (h >= 1 && h <= 12 && h !== 12) {
+                    const currentHour = now.getHours();
+                    // If it's currently afternoon/evening, assume PM
+                    if (currentHour >= 12) h += 12;
+                }
+                return { hour: h, minute: 0 };
+            }
+        }
+    ];
+    
+    // Date patterns
+    const datePatterns = [
+        // "today", "today morning", "today evening"
+        { 
+            regex: /\btoday\b(?:\s+(morning|afternoon|evening))?\b/g, 
+            handler: (match, timeOfDay) => {
+                const date = new Date(now);
+                let defaultTime = { hour: 23, minute: 55 }; // Default to 11:55 PM
+                
+                if (timeOfDay === 'morning') defaultTime = { hour: 9, minute: 0 };
+                else if (timeOfDay === 'afternoon') defaultTime = { hour: 14, minute: 0 };
+                else if (timeOfDay === 'evening') defaultTime = { hour: 18, minute: 0 };
+                
+                return { date, defaultTime };
+            }
+        },
+        // "tomorrow", "tomorrow morning", etc.
+        { 
+            regex: /\btomorrow\b(?:\s+(morning|afternoon|evening))?\b/g, 
+            handler: (match, timeOfDay) => {
+                const date = new Date(now);
+                date.setDate(date.getDate() + 1);
+                let defaultTime = { hour: 12, minute: 0 }; // Default to 12:00 PM for tomorrow
+                
+                if (timeOfDay === 'morning') defaultTime = { hour: 9, minute: 0 };
+                else if (timeOfDay === 'afternoon') defaultTime = { hour: 14, minute: 0 };
+                else if (timeOfDay === 'evening') defaultTime = { hour: 18, minute: 0 };
+                
+                return { date, defaultTime };
+            }
+        }
+    ];
+    
+    let bestMatch = null;
+    let bestScore = 0;
+    
+    // First, look for date patterns
+    for (const pattern of datePatterns) {
+        const regex = new RegExp(pattern.regex.source, pattern.regex.flags);
+        let match;
+        
+        while ((match = regex.exec(lowerText)) !== null) {
+            const result = pattern.handler(match[0], match[1]);
+            const score = match[0].length;
+            
+            if (score > bestScore) {
+                bestMatch = {
+                    type: 'date',
+                    result,
+                    match: match[0],
+                    start: match.index,
+                    end: match.index + match[0].length
+                };
+                bestScore = score;
+            }
+        }
+    }
+    
+    // Then look for time patterns
+    for (const pattern of timePatterns) {
+        const regex = new RegExp(pattern.regex.source, pattern.regex.flags);
+        let match;
+        
+        while ((match = regex.exec(lowerText)) !== null) {
+            const result = pattern.handler(match[0], match[1], match[2], match[3]);
+            const score = match[0].length;
+            
+            if (score > bestScore) {
+                bestMatch = {
+                    type: 'time',
+                    result,
+                    match: match[0],
+                    start: match.index,
+                    end: match.index + match[0].length
+                };
+                bestScore = score;
+            }
+        }
+    }
+    
+    // Combine date and time if found
+    if (bestMatch) {
+        if (bestMatch.type === 'date') {
+            const { date, defaultTime } = bestMatch.result;
+            
+            // Look for time patterns near the date
+            const timeContext = lowerText.substring(Math.max(0, bestMatch.start - 20), Math.min(lowerText.length, bestMatch.end + 20));
+            let timeFound = null;
+            
+            for (const pattern of timePatterns) {
+                const regex = new RegExp(pattern.regex.source, pattern.regex.flags);
+                const timeMatch = regex.exec(timeContext);
+                if (timeMatch) {
+                    timeFound = pattern.handler(timeMatch[0], timeMatch[1], timeMatch[2], timeMatch[3]);
+                    break;
+                }
+            }
+            
+            const finalTime = timeFound || defaultTime;
+            date.setHours(finalTime.hour, finalTime.minute, 0, 0);
+            parsedDate = date;
+            
+        } else if (bestMatch.type === 'time') {
+            // Time without explicit date - assume today
+            const date = new Date(now);
+            const { hour, minute } = bestMatch.result;
+            date.setHours(hour, minute, 0, 0);
+            
+            // If the time is in the past today, assume tomorrow
+            if (date < now) {
+                date.setDate(date.getDate() + 1);
+            }
+            
+            parsedDate = date;
+        }
+        
+        matchedText = bestMatch.match;
+        startIndex = bestMatch.start;
+        endIndex = bestMatch.end;
+    }
+    
+    return {
+        date: parsedDate,
+        matchedText,
+        startIndex,
+        endIndex,
+        hasMatch: !!parsedDate
+    };
+}
+
+// Function to highlight deadline text in task content
+function highlightDeadlineText(text, startIndex, endIndex) {
+    if (startIndex === -1 || endIndex === -1) return text;
+    
+    const before = text.substring(0, startIndex);
+    const highlighted = text.substring(startIndex, endIndex);
+    const after = text.substring(endIndex);
+    
+    return before + '<span class="deadline-highlight">' + highlighted + '</span>' + after;
+}
+
 // Function to create a task element from saved data
 function createTaskFromData(taskData) {
     const taskDiv = document.createElement('div');
@@ -700,7 +890,15 @@ function createTaskFromData(taskData) {
     // text in content container
     const span = document.createElement('span');
     span.className = 'task-text';
-    span.textContent = taskData.text;
+    
+    // Apply highlighting for deadline text when loading
+    const parseResult = parseSmartDeadline(taskData.text);
+    if (parseResult.hasMatch) {
+        span.innerHTML = highlightDeadlineText(taskData.text, parseResult.startIndex, parseResult.endIndex);
+    } else {
+        span.textContent = taskData.text;
+    }
+    
     taskContent.appendChild(span);
     
     // Add due date display if exists
@@ -764,6 +962,9 @@ ipcRenderer.on('request-data-for-save', () => {
 function doAddTask() {
     const taskText = quickAddInput.value.trim();
     if (taskText && taskText.trim() !== '') {
+        // Parse for smart deadlines
+        const parseResult = parseSmartDeadline(taskText);
+        
         const taskDiv = document.createElement('div');
         taskDiv.className = 'task';
         taskDiv.dataset.taskId = Date.now() + Math.random();
@@ -781,10 +982,37 @@ function doAddTask() {
         
         const span = document.createElement('span');
         span.className = 'task-text';
-        span.textContent = taskText;
+        
+        // Apply highlighting if deadline was found
+        if (parseResult.hasMatch) {
+            span.innerHTML = highlightDeadlineText(taskText, parseResult.startIndex, parseResult.endIndex);
+        } else {
+            span.textContent = taskText;
+        }
+        
         taskContent.appendChild(span);
         
+        // Add due date display if parsed
+        if (parseResult.date) {
+            const dueDateSpan = document.createElement('span');
+            dueDateSpan.className = 'task-due-date';
+            dueDateSpan.textContent = formatDueDate(parseResult.date.toISOString());
+            
+            // Add status classes based on due date
+            const dueClass = getDueDateClass(parseResult.date.toISOString());
+            if (dueClass) {
+                dueDateSpan.classList.add(dueClass);
+            }
+            
+            taskContent.appendChild(dueDateSpan);
+        }
+        
         taskDiv.appendChild(taskContent);
+
+        // Store parsed due date in dataset
+        if (parseResult.date) {
+            taskDiv.dataset.dueDate = parseResult.date.toISOString();
+        }
 
         // edit button third
         const editBtn = document.createElement('button');

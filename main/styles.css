@@ -477,6 +477,15 @@ main {
     min-width: 0;
 }
 
+/* Deadline text highlighting */
+.deadline-highlight {
+    background: rgba(118, 98, 207, 0.2);
+    border-bottom: 2px solid var(--accent-color);
+    padding: 1px 2px;
+    border-radius: 3px;
+    font-weight: 500;
+}
+
 /* Task content container */
 .task-content {
     display: flex;
