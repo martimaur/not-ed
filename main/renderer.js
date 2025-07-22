@@ -740,7 +740,7 @@ function parseSmartDeadline(text) {
             handler: (match, timeOfDay) => {
                 const date = new Date(now);
                 date.setDate(date.getDate() + 1);
-                let defaultTime = { hour: 12, minute: 0 }; // Default to 12:00 PM for tomorrow
+                let defaultTime = { hour: 23, minute: 55 }; // Default to 11:55 PM for tomorrow
                 
                 if (timeOfDay === 'morning') defaultTime = { hour: 9, minute: 0 };
                 else if (timeOfDay === 'afternoon') defaultTime = { hour: 14, minute: 0 };
@@ -1261,6 +1261,37 @@ dateInput.addEventListener('change', () => {
     checkForChanges();
 });
 
+// Date input focus listener - set default date/time when user first interacts
+dateInput.addEventListener('focus', () => {
+    // Only set default if date is currently empty
+    if (!dateInput.value && !taskHasDateSet) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        dateInput.value = `${year}-${month}-${day}`;
+        setTimeFromDate(now);
+        taskHasDateSet = true;
+        checkForChanges();
+    }
+});
+
+// Time display click listener - set default date/time when user first interacts with time
+const originalTimeDisplayClick = timeDisplay.onclick;
+timeDisplay.addEventListener('click', () => {
+    // Only set default date if date is currently empty
+    if (!dateInput.value && !taskHasDateSet) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        dateInput.value = `${year}-${month}-${day}`;
+        setTimeFromDate(now);
+        taskHasDateSet = true;
+        checkForChanges();
+    }
+});
+
 // Clear due date button
 clearDueBtn.addEventListener('click', () => {
     dateInput.value = '';
@@ -1344,13 +1375,9 @@ function showEditModal(taskDiv, taskTextSpan) {
         setTimeFromDate(dueDate);
     } else {
         taskHasDateSet = false;
-        // Default to current date and time when no date is set
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        dateInput.value = `${year}-${month}-${day}`;
-        setTimeFromDate(now);
+        // Don't set any default date/time - leave fields empty
+        dateInput.value = '';
+        setTimeFromDate(null);
     }
     
     editModal.style.display = 'flex';
@@ -1368,13 +1395,14 @@ function checkForChanges() {
     const currentText = editInput.value.trim();
     const originalText = originalTaskText.trim();
     
-    // Get current due date
-    const currentDueDate = getSelectedDateTime();
+    // Get current due date only if user has set one
+    const currentDueDate = taskHasDateSet ? getSelectedDateTime() : null;
     const currentDueDateString = currentDueDate ? currentDueDate.toISOString() : null;
     
     // Check if there's a text change or due date change
     const textChanged = currentText !== originalText;
-    const dueDateChanged = currentDueDateString !== originalDueDate;
+    // Only consider due date changed if user has actively set a date and it differs from original
+    const dueDateChanged = taskHasDateSet && (currentDueDateString !== originalDueDate);
     
     if (textChanged || dueDateChanged) {
         // Only show as modified if current text is not empty (has meaningful content)
@@ -1423,25 +1451,48 @@ function hideEditModal() {
     // Auto-save when closing
     if (currentEditTask) {
         const newText = editInput.value.trim();
-        const newDueDate = getSelectedDateTime();
+        const newDueDate = taskHasDateSet ? getSelectedDateTime() : null;
         
         if (newText) {
-            currentEditTask.taskTextSpan.textContent = newText;
+            // Apply smart parsing to the new text if no due date is currently set
+            let finalDueDate = newDueDate;
+            if (!taskHasDateSet && !originalDueDate) {
+                const parseResult = parseSmartDeadline(newText);
+                if (parseResult.hasMatch) {
+                    finalDueDate = parseResult.date;
+                    // Update the text content with highlighting
+                    currentEditTask.taskTextSpan.innerHTML = highlightDeadlineText(newText, parseResult.startIndex, parseResult.endIndex);
+                } else {
+                    currentEditTask.taskTextSpan.textContent = newText;
+                }
+            } else {
+                // Re-apply highlighting if there's a due date
+                if (originalDueDate || taskHasDateSet) {
+                    const parseResult = parseSmartDeadline(newText);
+                    if (parseResult.hasMatch) {
+                        currentEditTask.taskTextSpan.innerHTML = highlightDeadlineText(newText, parseResult.startIndex, parseResult.endIndex);
+                    } else {
+                        currentEditTask.taskTextSpan.textContent = newText;
+                    }
+                } else {
+                    currentEditTask.taskTextSpan.textContent = newText;
+                }
+            }
             
             // Check if date/time has been modified from original state
-            const newDueDateString = newDueDate ? newDueDate.toISOString() : null;
-            const dateWasModified = newDueDateString !== originalDueDate;
+            const finalDueDateString = finalDueDate ? finalDueDate.toISOString() : null;
+            const dateWasModified = finalDueDateString !== originalDueDate;
             
-            // Only update due date if it was originally set OR if the user has made changes
-            if (taskHasDateSet || dateWasModified) {
-                if (newDueDate) {
-                    currentEditTask.taskDiv.dataset.dueDate = newDueDate.toISOString();
+            // Update due date if it was originally set, user has made changes, or smart parsing found a date
+            if (taskHasDateSet || dateWasModified || finalDueDate) {
+                if (finalDueDate) {
+                    currentEditTask.taskDiv.dataset.dueDate = finalDueDate.toISOString();
                 } else {
                     delete currentEditTask.taskDiv.dataset.dueDate;
                 }
                 
                 // Update due date display in task
-                updateTaskDueDateDisplay(currentEditTask.taskDiv, newDueDate);
+                updateTaskDueDateDisplay(currentEditTask.taskDiv, finalDueDate);
             }
             
             // Tasks will be saved when app closes
