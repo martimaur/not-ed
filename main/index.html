@@ -24,6 +24,12 @@
     </div>
   </div>
   <div class="title-bar-controls">
+    <button class="title-bar-control settings" id="settings-btn" title="Settings">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
+      </svg>
+    </button>
     <button class="title-bar-control pin" id="pin-btn" title="Pin window to stay on top">
       <svg class="pin-icon-unpinned" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 17v5"/>
@@ -167,6 +173,109 @@
     </svg>
     Delete Tab
   </button>
+</div>
+
+<!-- Settings Modal -->
+<div id="settings-modal" class="modal-overlay" style="display:none;">
+  <div class="modal-content settings-modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Settings</h2>
+      <button class="modal-close" id="settings-close-btn">&times;</button>
+    </div>
+    <div class="modal-body settings-body">
+      
+      <!-- Theme Setting -->
+      <div class="setting-section">
+        <h3 class="setting-title">Appearance</h3>
+        <div class="setting-item">
+          <label class="setting-label">Theme</label>
+          <div class="setting-control">
+            <div class="theme-toggle">
+              <input type="radio" id="theme-dark" name="theme" value="dark" checked>
+              <label for="theme-dark" class="theme-option">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+                Dark
+              </label>
+              <input type="radio" id="theme-light" name="theme" value="light">
+              <label for="theme-light" class="theme-option">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="5"/>
+                  <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                </svg>
+                Light
+              </label>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Accent Color Setting -->
+        <div class="setting-item">
+          <label class="setting-label">Accent Color</label>
+          <div class="setting-control">
+            <div class="color-picker">
+              <div class="color-option" data-color="#7662cf" style="background: #7662cf;" title="Purple"></div>
+              <div class="color-option" data-color="#3b82f6" style="background: #3b82f6;" title="Blue"></div>
+              <div class="color-option" data-color="#10b981" style="background: #10b981;" title="Green"></div>
+              <div class="color-option" data-color="#f59e0b" style="background: #f59e0b;" title="Orange"></div>
+              <div class="color-option" data-color="#ef4444" style="background: #ef4444;" title="Red"></div>
+              <div class="color-option" data-color="#8b5cf6" style="background: #8b5cf6;" title="Violet"></div>
+              <div class="color-option" data-color="#06b6d4" style="background: #06b6d4;" title="Cyan"></div>
+              <div class="color-option" data-color="#84cc16" style="background: #84cc16;" title="Lime"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Time Format Setting -->
+      <div class="setting-section">
+        <h3 class="setting-title">Time & Date</h3>
+        <div class="setting-item">
+          <label class="setting-label">Time Format</label>
+          <div class="setting-control">
+            <div class="time-format-toggle">
+              <input type="radio" id="time-12h" name="timeFormat" value="12h" checked>
+              <label for="time-12h" class="format-option">12h (5:30 PM)</label>
+              <input type="radio" id="time-24h" name="timeFormat" value="24h">
+              <label for="time-24h" class="format-option">24h (17:30)</label>
+            </div>
+          </div>
+        </div>
+        
+        <!-- End of Work Time Setting -->
+        <div class="setting-item">
+          <label class="setting-label">Default End of Work Time</label>
+          <div class="setting-control">
+            <div class="work-time-picker">
+              <select id="work-end-hour" class="time-select">
+                <!-- Options will be populated by JavaScript -->
+              </select>
+              <span class="time-separator">:</span>
+              <select id="work-end-minute" class="time-select">
+                <option value="0">00</option>
+                <option value="15">15</option>
+                <option value="30">30</option>
+                <option value="45">45</option>
+              </select>
+              <select id="work-end-period" class="time-select period-select">
+                <option value="AM">AM</option>
+                <option value="PM">PM</option>
+              </select>
+            </div>
+            <div class="setting-description">
+              This time will be used as the default when you type "today" without specifying a time.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="settings-cancel-btn">Cancel</button>
+      <button class="btn btn-primary" id="settings-save-btn">Save Changes</button>
+    </div>
+  </div>
 </div>
 
 <script src="./renderer.js"></script>

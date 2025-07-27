@@ -90,6 +90,29 @@ const timePickerCancel = document.getElementById('time-picker-cancel');
 const timePickerOk = document.getElementById('time-picker-ok');
 const clearDueBtn = document.getElementById('clear-due-btn');
 
+// Settings modal elements
+const settingsBtn = document.getElementById('settings-btn');
+const settingsModal = document.getElementById('settings-modal');
+const settingsCloseBtn = document.getElementById('settings-close-btn');
+const settingsCancelBtn = document.getElementById('settings-cancel-btn');
+const settingsSaveBtn = document.getElementById('settings-save-btn');
+
+// Settings controls
+const themeRadios = document.querySelectorAll('input[name="theme"]');
+const timeFormatRadios = document.querySelectorAll('input[name="timeFormat"]');
+const colorOptions = document.querySelectorAll('.color-option');
+const workEndHour = document.getElementById('work-end-hour');
+const workEndMinute = document.getElementById('work-end-minute');
+const workEndPeriod = document.getElementById('work-end-period');
+
+// Settings configuration
+let settings = {
+    theme: 'dark',
+    timeFormat: '12h',
+    accentColor: '#7662cf',
+    workEndTime: { hour: 11, minute: 55, period: 'PM' }
+};
+
 // Current task being edited
 let currentEditTask = null;
 let originalTaskText = '';
@@ -176,7 +199,44 @@ function createTab(id, name) {
     tab.addEventListener('drop', handleTabDrop);
     tab.addEventListener('dragend', handleTabDragEnd);
     
+    // Adjust tab sizes after adding new tab
+    adjustTabSizes();
+    
     return tab;
+}
+
+// Function to dynamically adjust tab sizes based on available space
+function adjustTabSizes() {
+    const tabs = tabContainer.querySelectorAll('.tab');
+    const addBtn = tabContainer.querySelector('.tab-add-btn');
+    
+    if (tabs.length === 0) return;
+    
+    // Get actual visible width (viewport width) minus add button width and padding
+    const viewportWidth = window.innerWidth;
+    const addBtnWidth = addBtn ? addBtn.offsetWidth : 32;
+    const padding = 60; // Account for container padding, gaps, and margins
+    const availableWidth = viewportWidth - addBtnWidth - padding;
+    
+    // Calculate optimal tab width (matching CSS values)
+    const minTabWidth = 20;
+    const maxTabWidth = 100;
+    const idealTabWidth = 80;
+    
+    // Calculate width per tab based on available space
+    let tabWidth = Math.max(minTabWidth, Math.min(maxTabWidth, availableWidth / tabs.length));
+    
+    // If tabs would be too small, use minimum width and allow scrolling
+    if (tabWidth < minTabWidth) {
+        tabWidth = minTabWidth;
+    }
+    
+    // Apply the calculated width to all tabs
+    tabs.forEach(tab => {
+        tab.style.width = `${tabWidth}px`;
+        tab.style.minWidth = `${minTabWidth}px`;
+        tab.style.maxWidth = `${maxTabWidth}px`;
+    });
 }
 
 // Drag and drop variables
@@ -442,12 +502,16 @@ async function loadTabs() {
         // Ensure we always have at least one tab
         ensureHomeTabExists();
         
+        // Adjust tab sizes after all tabs are loaded
+        setTimeout(() => adjustTabSizes(), 100);
+        
         console.log('Tabs loaded from file:', tabs);
     } catch (error) {
         console.error('Error loading tabs:', error);
         // Fallback to empty tabs
         tabs = {};
         ensureHomeTabExists();
+        setTimeout(() => adjustTabSizes(), 100);
     }
 }
 
@@ -519,6 +583,9 @@ function deleteTab(tabId) {
     
     // Ensure we always have at least one tab (create Home if needed)
     ensureHomeTabExists();
+    
+    // Adjust tab sizes after deletion
+    adjustTabSizes();
     
     // Don't save here - will be saved when app closes
 }
@@ -725,7 +792,12 @@ function parseSmartDeadline(text) {
             regex: /\btoday\b(?:\s+(morning|afternoon|evening))?\b/g, 
             handler: (match, timeOfDay) => {
                 const date = new Date(now);
-                let defaultTime = { hour: 23, minute: 55 }; // Default to 11:55 PM
+                // Use settings for default end of work time
+                let workEndHour = settings.workEndTime.hour;
+                if (settings.workEndTime.period === 'PM' && workEndHour !== 12) workEndHour += 12;
+                if (settings.workEndTime.period === 'AM' && workEndHour === 12) workEndHour = 0;
+                
+                let defaultTime = { hour: workEndHour, minute: settings.workEndTime.minute };
                 
                 if (timeOfDay === 'morning') defaultTime = { hour: 9, minute: 0 };
                 else if (timeOfDay === 'afternoon') defaultTime = { hour: 14, minute: 0 };
@@ -740,7 +812,12 @@ function parseSmartDeadline(text) {
             handler: (match, timeOfDay) => {
                 const date = new Date(now);
                 date.setDate(date.getDate() + 1);
-                let defaultTime = { hour: 23, minute: 55 }; // Default to 11:55 PM for tomorrow
+                // Use settings for default end of work time
+                let workEndHour = settings.workEndTime.hour;
+                if (settings.workEndTime.period === 'PM' && workEndHour !== 12) workEndHour += 12;
+                if (settings.workEndTime.period === 'AM' && workEndHour === 12) workEndHour = 0;
+                
+                let defaultTime = { hour: workEndHour, minute: settings.workEndTime.minute };
                 
                 if (timeOfDay === 'morning') defaultTime = { hour: 9, minute: 0 };
                 else if (timeOfDay === 'afternoon') defaultTime = { hour: 14, minute: 0 };
@@ -857,6 +934,119 @@ function highlightDeadlineText(text, startIndex, endIndex) {
     const after = text.substring(endIndex);
     
     return before + '<span class="deadline-highlight">' + highlighted + '</span>' + after;
+}
+
+// Settings management functions
+function loadSettings() {
+    try {
+        const savedSettings = localStorage.getItem('noted-settings');
+        if (savedSettings) {
+            settings = { ...settings, ...JSON.parse(savedSettings) };
+        }
+    } catch (error) {
+        console.error('Error loading settings:', error);
+    }
+    applySettings();
+}
+
+function saveSettings() {
+    try {
+        localStorage.setItem('noted-settings', JSON.stringify(settings));
+        applySettings();
+    } catch (error) {
+        console.error('Error saving settings:', error);
+    }
+}
+
+function applySettings() {
+    // Apply theme
+    document.body.setAttribute('data-theme', settings.theme);
+    
+    // Apply accent color
+    document.documentElement.style.setProperty('--accent-color', settings.accentColor);
+    
+    // Update time displays if needed (this could be expanded later)
+    updateAllTimestamps();
+}
+
+function updateAllTimestamps() {
+    // Re-format all due date displays according to current settings
+    document.querySelectorAll('.task-due-date').forEach(dueDateSpan => {
+        const taskDiv = dueDateSpan.closest('.task');
+        if (taskDiv && taskDiv.dataset.dueDate) {
+            dueDateSpan.textContent = formatDueDate(taskDiv.dataset.dueDate);
+        }
+    });
+}
+
+function showSettingsModal() {
+    // Initialize settings UI with current values
+    initializeSettingsUI();
+    settingsModal.style.display = 'flex';
+}
+
+function hideSettingsModal() {
+    settingsModal.style.display = 'none';
+}
+
+function initializeSettingsUI() {
+    // Set theme radio
+    const themeRadio = document.querySelector(`input[name="theme"][value="${settings.theme}"]`);
+    if (themeRadio) themeRadio.checked = true;
+    
+    // Set time format radio
+    const timeFormatRadio = document.querySelector(`input[name="timeFormat"][value="${settings.timeFormat}"]`);
+    if (timeFormatRadio) timeFormatRadio.checked = true;
+    
+    // Set accent color
+    colorOptions.forEach(option => {
+        option.classList.remove('selected');
+        if (option.dataset.color === settings.accentColor) {
+            option.classList.add('selected');
+        }
+    });
+    
+    // Set work end time
+    populateWorkTimeSelects();
+    workEndHour.value = settings.workEndTime.hour;
+    workEndMinute.value = settings.workEndTime.minute;
+    workEndPeriod.value = settings.workEndTime.period;
+}
+
+function populateWorkTimeSelects() {
+    // Populate hour options
+    workEndHour.innerHTML = '';
+    for (let i = 1; i <= 12; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = i.toString();
+        workEndHour.appendChild(option);
+    }
+}
+
+function collectSettingsFromUI() {
+    const newSettings = { ...settings };
+    
+    // Get theme
+    const selectedTheme = document.querySelector('input[name="theme"]:checked');
+    if (selectedTheme) newSettings.theme = selectedTheme.value;
+    
+    // Get time format
+    const selectedTimeFormat = document.querySelector('input[name="timeFormat"]:checked');
+    if (selectedTimeFormat) newSettings.timeFormat = selectedTimeFormat.value;
+    
+    // Get accent color
+    const selectedColor = document.querySelector('.color-option.selected');
+    if (selectedColor) newSettings.accentColor = selectedColor.dataset.color;
+    
+    // Get work end time
+    newSettings.workEndTime = {
+        hour: parseInt(workEndHour.value),
+        minute: parseInt(workEndMinute.value),
+        period: workEndPeriod.value
+    };
+    
+    return newSettings;
 }
 
 // Function to create a task element from saved data
@@ -1062,6 +1252,50 @@ document.addEventListener('DOMContentLoaded', async () => {
         ghostClass: 'sortable-ghost'
     });
     
+    // Initialize Lucide icons
+    lucide.createIcons();
+    
+    // Load settings and initialize settings UI
+    loadSettings();
+    applySettings();
+    populateWorkTimeSelects();
+    
+    // Settings modal event listeners
+    settingsBtn.addEventListener('click', () => {
+        initializeSettingsUI();
+        settingsModal.style.display = 'flex';
+    });
+    
+    settingsCloseBtn.addEventListener('click', () => {
+        settingsModal.style.display = 'none';
+    });
+    
+    settingsCancelBtn.addEventListener('click', () => {
+        settingsModal.style.display = 'none';
+    });
+    
+    settingsSaveBtn.addEventListener('click', () => {
+        settings = { ...settings, ...collectSettingsFromUI() };
+        saveSettings();
+        applySettings();
+        settingsModal.style.display = 'none';
+    });
+    
+    // Close modal when clicking outside
+    settingsModal.addEventListener('click', (e) => {
+        if (e.target === settingsModal) {
+            settingsModal.style.display = 'none';
+        }
+    });
+    
+    // Color picker handling
+    colorOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            colorOptions.forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+        });
+    });
+    
     // Give a bit more time for everything to render
     await new Promise(resolve => setTimeout(resolve, 100));
     
@@ -1069,6 +1303,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Tell main process that we're ready to show the window
     ipcRenderer.send('renderer-ready');
 });
+
+// Add window resize listener to adjust tab sizes
+window.addEventListener('resize', () => {
+    adjustTabSizes();
+});
+
+// Add horizontal scrolling support for tab container
+tabContainer.addEventListener('wheel', (e) => {
+    // Prevent default vertical scrolling
+    e.preventDefault();
+    
+    // Calculate scroll amount with smoother sensitivity
+    const scrollAmount = e.deltaY * 3
+    
+    // Apply smooth horizontal scroll
+    tabContainer.scrollTo({
+        left: tabContainer.scrollLeft + scrollAmount,
+        behavior: 'smooth'
+    });
+}, { passive: false });
 
 // Quick add input functionality
 quickAddInput.addEventListener('keydown', (e) => {
@@ -1328,11 +1582,6 @@ editModal.addEventListener('mouseup', (e) => {
         hideEditModal();
     }
     mouseDownOutside = false;
-});
-
-// Initialize Lucide icons
-document.addEventListener('DOMContentLoaded', () => {
-    lucide.createIcons();
 });
 
 // Allow Enter key to submit

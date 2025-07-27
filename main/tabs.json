@@ -107,5 +107,55 @@
         "order": 0
       }
     ]
+  },
+  "tab_1753198038639": {
+    "name": "New Tab",
+    "tasks": [
+      {
+        "id": 1,
+        "text": "stop today",
+        "completed": false,
+        "order": 0,
+        "dueDate": "2025-07-22T22:30:00.000Z"
+      }
+    ]
+  },
+  "tab_1753198063909": {
+    "name": "New Tab",
+    "tasks": [
+      {
+        "id": 1,
+        "text": "cook dinner at 20h",
+        "completed": false,
+        "order": 0,
+        "dueDate": "2025-07-22T19:00:00.000Z"
+      },
+      {
+        "id": 2,
+        "text": "cook tomorrow",
+        "completed": false,
+        "order": 1,
+        "dueDate": "2025-07-23T22:30:00.000Z"
+      },
+      {
+        "id": 3,
+        "text": "cook today",
+        "completed": false,
+        "order": 2,
+        "dueDate": "2025-07-22T22:30:00.000Z"
+      }
+    ]
+  },
+  "tab_1753204199605": {
+    "name": "eaea",
+    "tasks": []
+  },
+  "tab_1753204201538": {
+    "name": "eaea",
+    "tasks": []
+  },
+  "tab_1753204202944": {
+    "name": "ea",
+    "tasks": []
   }
 }
