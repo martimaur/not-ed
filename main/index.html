@@ -69,6 +69,59 @@
 <main>
   <div class="quick-add-container">
     <input type="text" id="quick-add-input" placeholder="Type a task and press Enter..." />
+    
+    <!-- Stats Panel -->
+    <div class="stats-panel">
+      <div class="stat-row">
+        <span class="stat-label">Today:</span>
+        <span class="stat-numbers">
+          <span class="stat-number completed" id="tasks-completed-today">0</span>
+          <span class="stat-separator">/</span>
+          <span class="stat-number due" id="tasks-due-today">0</span>
+        </span>
+      </div>
+      <div class="stat-divider">|</div>
+      <div class="stat-row">
+        <span class="stat-label">All:</span>
+        <span class="stat-numbers">
+          <span class="stat-number completed" id="all-tasks-completed">0</span>
+          <span class="stat-separator">/</span>
+          <span class="stat-number due" id="all-tasks-total">0</span>
+        </span>
+      </div>
+    </div>
+    
+    <!-- Weekly Tasks Panel -->
+    <div class="weekly-panel">
+      <div class="day-item" data-day="1">
+        <div class="day-label">MO</div>
+        <div class="day-count" id="monday-count">0</div>
+      </div>
+      <div class="day-item" data-day="2">
+        <div class="day-label">TU</div>
+        <div class="day-count" id="tuesday-count">0</div>
+      </div>
+      <div class="day-item" data-day="3">
+        <div class="day-label">WE</div>
+        <div class="day-count" id="wednesday-count">0</div>
+      </div>
+      <div class="day-item" data-day="4">
+        <div class="day-label">TH</div>
+        <div class="day-count" id="thursday-count">0</div>
+      </div>
+      <div class="day-item" data-day="5">
+        <div class="day-label">FR</div>
+        <div class="day-count" id="friday-count">0</div>
+      </div>
+      <div class="day-item" data-day="6">
+        <div class="day-label">SA</div>
+        <div class="day-count" id="saturday-count">0</div>
+      </div>
+      <div class="day-item" data-day="0">
+        <div class="day-label">SU</div>
+        <div class="day-count" id="sunday-count">0</div>
+      </div>
+    </div>
   </div>
   <div class="task-list">
     <!-- Tasks will be added here dynamically -->

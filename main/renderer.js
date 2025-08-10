@@ -363,6 +363,9 @@ function saveCurrentTabTasks() {
         console.log(`Saving tasks for tab ${currentTabId}:`, tasks);
         tabs[currentTabId].tasks = tasks;
         console.log(`Tasks saved to tab ${currentTabId}. Total tasks: ${tasks.length}`);
+        
+        // Update global stats after saving tasks
+        updateTaskStats();
     } else {
         console.error(`Tab ${currentTabId} not found in tabs object!`);
         console.log('Available tabs:', Object.keys(tabs));
@@ -381,6 +384,9 @@ function loadTabTasks(tabId) {
     } else {
         console.log(`No tasks found for tab ${tabId} or tab doesn't exist`);
     }
+    
+    // Update stats after loading tasks
+    updateTaskStats();
 }
 
 function startTabRename(tabElement, tabId) {
@@ -670,7 +676,16 @@ function collectTasksAsJSON() {
             taskData.dueDate = taskDiv.dataset.dueDate;
         }
         
-        return taskData;
+        // Add creation date if it exists in dataset, or create one if missing
+        if (taskDiv.dataset.creationDate) {
+            taskData.creationDate = taskDiv.dataset.creationDate;
+        } else if (!taskData.dueDate) {
+            // Only add creation date if no due date exists
+            taskData.creationDate = new Date().toISOString();
+            taskDiv.dataset.creationDate = taskData.creationDate;
+        }
+        
+        return ensureTaskHasDate(taskData);
     });
     return tasks;
 }
@@ -1061,6 +1076,14 @@ function createTaskFromData(taskData) {
         taskDiv.dataset.dueDate = taskData.dueDate;
     }
     
+    // Store creation date in dataset if it exists
+    if (taskData.creationDate) {
+        taskDiv.dataset.creationDate = taskData.creationDate;
+    }
+    
+    // Ensure task has a date for purging logic
+    ensureTaskHasDate(taskData);
+    
     // Add completed class if task was completed (static, no animation on load)
     if (taskData.completed) {
         taskDiv.classList.add('completed-static');
@@ -1203,6 +1226,9 @@ function doAddTask() {
         // Store parsed due date in dataset
         if (parseResult.date) {
             taskDiv.dataset.dueDate = parseResult.date.toISOString();
+        } else {
+            // If no due date, add creation date for purging logic
+            taskDiv.dataset.creationDate = new Date().toISOString();
         }
 
         // edit button third
@@ -1233,6 +1259,9 @@ function doAddTask() {
 
         taskList.appendChild(taskDiv);
         quickAddInput.value = '';
+        
+        // Update stats after adding new task
+        updateTaskStats();
         
         // Tasks will be saved when app closes
     }
@@ -1299,6 +1328,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Give a bit more time for everything to render
     await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Initialize stats after everything is loaded
+    updateTaskStats();
+    
+    // Start automatic purging system
+    scheduleAutomaticPurge();
     
     console.log('Sending renderer-ready signal...');
     // Tell main process that we're ready to show the window
@@ -1760,11 +1795,16 @@ function hideEditModal() {
     originalTaskText = '';
     originalDueDate = null;
     taskHasDateSet = false;
+    
+    // Update stats after editing task
+    updateTaskStats();
 }
 
 function deleteTask() {
     if (currentEditTask) {
         currentEditTask.taskDiv.remove();
+        // Update stats after deleting task
+        updateTaskStats();
         // Tasks will be saved when app closes
         editModal.style.display = 'none';
         editModalContent.classList.remove('modified');
@@ -1820,5 +1860,207 @@ function toggleTaskCompletion(taskDiv, checkbox) {
         toggleDebounce.set(taskId, timeoutId);
     }
     
+    // Save the current tab tasks to persist the changes
+    saveCurrentTabTasks();
+    
+    // Update stats after task change (already called in saveCurrentTabTasks, but keeping for safety)
+    updateTaskStats();
+    
     // Tasks will be saved when app closes
+}
+
+// Stats functionality
+function updateTaskStats() {
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    let tasksDueToday = 0;
+    let tasksCompletedToday = 0;
+    let allTasksCompleted = 0;
+    let allTasksTotal = 0;
+    
+    // Get all tasks from ALL tabs (global stats)
+    Object.keys(tabs).forEach(tabId => {
+        if (tabs[tabId] && tabs[tabId].tasks) {
+            tabs[tabId].tasks.forEach(task => {
+                // Count all tasks
+                allTasksTotal++;
+                if (task.completed) {
+                    allTasksCompleted++;
+                }
+                
+                // Count today's tasks
+                if (task.dueDate) {
+                    const dueDate = new Date(task.dueDate);
+                    const dueDateOnly = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+                    
+                    // Check if task is due today
+                    if (dueDateOnly.getTime() === todayStart.getTime()) {
+                        tasksDueToday++;
+                        if (task.completed) {
+                            tasksCompletedToday++;
+                        }
+                    }
+                }
+            });
+        }
+    });
+    
+    // Update the display
+    const dueTodayElement = document.getElementById('tasks-due-today');
+    const completedTodayElement = document.getElementById('tasks-completed-today');
+    const allCompletedElement = document.getElementById('all-tasks-completed');
+    const allTotalElement = document.getElementById('all-tasks-total');
+    
+    if (dueTodayElement) {
+        dueTodayElement.textContent = tasksDueToday;
+    }
+    
+    if (completedTodayElement) {
+        completedTodayElement.textContent = tasksCompletedToday;
+    }
+    
+    if (allCompletedElement) {
+        allCompletedElement.textContent = allTasksCompleted;
+    }
+    
+    if (allTotalElement) {
+        allTotalElement.textContent = allTasksTotal;
+    }
+    
+    // Update weekly tasks display
+    updateWeeklyTasks();
+}
+
+function updateWeeklyTasks() {
+    const today = new Date();
+    const currentDayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    
+    // Initialize counters for each day
+    const dayCounts = {
+        0: 0, // Sunday
+        1: 0, // Monday
+        2: 0, // Tuesday
+        3: 0, // Wednesday
+        4: 0, // Thursday
+        5: 0, // Friday
+        6: 0  // Saturday
+    };
+    
+    // Count tasks for each day of the week
+    Object.keys(tabs).forEach(tabId => {
+        if (tabs[tabId] && tabs[tabId].tasks) {
+            tabs[tabId].tasks.forEach(task => {
+                if (task.dueDate && !task.completed) {
+                    const dueDate = new Date(task.dueDate);
+                    const dayOfWeek = dueDate.getDay();
+                    dayCounts[dayOfWeek]++;
+                }
+            });
+        }
+    });
+    
+    // Update the display
+    const dayElements = {
+        0: document.getElementById('sunday-count'),
+        1: document.getElementById('monday-count'),
+        2: document.getElementById('tuesday-count'),
+        3: document.getElementById('wednesday-count'),
+        4: document.getElementById('thursday-count'),
+        5: document.getElementById('friday-count'),
+        6: document.getElementById('saturday-count')
+    };
+    
+    // Update counts and highlight current day
+    Object.keys(dayElements).forEach(day => {
+        const dayNum = parseInt(day);
+        const element = dayElements[dayNum];
+        const dayItem = document.querySelector(`[data-day="${dayNum}"]`);
+        
+        if (element) {
+            element.textContent = dayCounts[dayNum];
+        }
+        
+        if (dayItem) {
+            if (dayNum === currentDayOfWeek) {
+                dayItem.classList.add('current');
+            } else {
+                dayItem.classList.remove('current');
+            }
+        }
+    });
+}
+
+// Purge completed tasks from previous days
+function purgeCompletedTasks() {
+    const now = new Date();
+    const today4AM = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 4, 0, 0, 0);
+    
+    // If current time is before 4 AM, consider it as previous day's 4 AM cutoff
+    if (now.getHours() < 4) {
+        today4AM.setDate(today4AM.getDate() - 1);
+    }
+    
+    let tasksRemoved = false;
+    
+    Object.keys(tabs).forEach(tabId => {
+        if (tabs[tabId] && tabs[tabId].tasks) {
+            const originalLength = tabs[tabId].tasks.length;
+            
+            tabs[tabId].tasks = tabs[tabId].tasks.filter(task => {
+                if (!task.completed) {
+                    return true; // Keep uncompleted tasks
+                }
+                
+                // Get the task's reference date (due date or creation date)
+                let taskDate = null;
+                if (task.dueDate) {
+                    taskDate = new Date(task.dueDate);
+                } else if (task.creationDate) {
+                    taskDate = new Date(task.creationDate);
+                } else {
+                    // If no dates exist, keep the task (shouldn't happen with new logic)
+                    return true;
+                }
+                
+                // If task date is before today's 4 AM cutoff, remove it
+                return taskDate >= today4AM;
+            });
+            
+            if (tabs[tabId].tasks.length !== originalLength) {
+                tasksRemoved = true;
+            }
+        }
+    });
+    
+    if (tasksRemoved) {
+        // Reload current tab's tasks and update stats
+        loadTabTasks(currentTabId);
+        updateTaskStats();
+        updateWeeklyTasks();
+        saveTabs();
+    }
+}
+
+// Schedule automatic purging
+function scheduleAutomaticPurge() {
+    // Run purge immediately on app start
+    purgeCompletedTasks();
+    
+    // Schedule purge to run every hour to catch the 4 AM boundary
+    setInterval(() => {
+        const now = new Date();
+        // Only purge at 4 AM (run once per day)
+        if (now.getHours() === 4 && now.getMinutes() === 0) {
+            purgeCompletedTasks();
+        }
+    }, 60000); // Check every minute for more precision
+}
+
+// Add creation date to tasks that don't have due dates
+function ensureTaskHasDate(taskData) {
+    if (!taskData.dueDate && !taskData.creationDate) {
+        taskData.creationDate = new Date().toISOString();
+    }
+    return taskData;
 }

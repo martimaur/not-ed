@@ -1,15 +1,7 @@
 {
   "tab_1753197234830": {
     "name": "cook",
-    "tasks": [
-      {
-        "id": 1,
-        "text": "cooking shi",
-        "completed": false,
-        "order": 0,
-        "dueDate": "2025-07-22T15:15:00.000Z"
-      }
-    ]
+    "tasks": []
   },
   "tab_1753204201538": {
     "name": "eaea",
@@ -28,7 +20,7 @@
       {
         "id": 2,
         "text": "cook dinner today",
-        "completed": false,
+        "completed": true,
         "order": 1,
         "dueDate": "2025-08-11T22:05:00.000Z"
       }
