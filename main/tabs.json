@@ -1,90 +1,4 @@
 {
-  "home_1753192945829": {
-    "name": "Home",
-    "tasks": [
-      {
-        "id": 1,
-        "text": "nahh",
-        "completed": false,
-        "order": 0,
-        "dueDate": "2025-07-22T18:45:00.000Z"
-      },
-      {
-        "id": 2,
-        "text": "e",
-        "completed": false,
-        "order": 1,
-        "dueDate": "2025-07-31T14:45:00.000Z"
-      },
-      {
-        "id": 3,
-        "text": "eaea",
-        "completed": false,
-        "order": 2
-      },
-      {
-        "id": 4,
-        "text": "ea",
-        "completed": false,
-        "order": 3
-      },
-      {
-        "id": 5,
-        "text": "NAHHHHHHHHHH",
-        "completed": false,
-        "order": 4,
-        "dueDate": "2025-07-22T14:45:00.000Z"
-      },
-      {
-        "id": 6,
-        "text": "eaea",
-        "completed": false,
-        "order": 5
-      },
-      {
-        "id": 7,
-        "text": "mah",
-        "completed": false,
-        "order": 6
-      },
-      {
-        "id": 8,
-        "text": "ok",
-        "completed": false,
-        "order": 7
-      },
-      {
-        "id": 9,
-        "text": "ahah",
-        "completed": false,
-        "order": 8
-      },
-      {
-        "id": 10,
-        "text": "eaeae",
-        "completed": false,
-        "order": 9
-      },
-      {
-        "id": 11,
-        "text": "eaea",
-        "completed": false,
-        "order": 10
-      }
-    ]
-  },
-  "tab_1753192957928": {
-    "name": "EHEH",
-    "tasks": [
-      {
-        "id": 1,
-        "text": "Finish ts",
-        "completed": false,
-        "order": 0,
-        "dueDate": "2025-07-22T16:00:00.000Z"
-      }
-    ]
-  },
   "tab_1753197234830": {
     "name": "cook",
     "tasks": [
@@ -97,65 +11,27 @@
       }
     ]
   },
-  "tab_1753197253660": {
-    "name": "eae",
-    "tasks": [
-      {
-        "id": 1,
-        "text": "oo",
-        "completed": false,
-        "order": 0
-      }
-    ]
-  },
-  "tab_1753198038639": {
-    "name": "New Tab",
-    "tasks": [
-      {
-        "id": 1,
-        "text": "stop today",
-        "completed": false,
-        "order": 0,
-        "dueDate": "2025-07-22T22:30:00.000Z"
-      }
-    ]
-  },
-  "tab_1753198063909": {
-    "name": "New Tab",
-    "tasks": [
-      {
-        "id": 1,
-        "text": "cook dinner at 20h",
-        "completed": false,
-        "order": 0,
-        "dueDate": "2025-07-22T19:00:00.000Z"
-      },
-      {
-        "id": 2,
-        "text": "cook tomorrow",
-        "completed": false,
-        "order": 1,
-        "dueDate": "2025-07-23T22:30:00.000Z"
-      },
-      {
-        "id": 3,
-        "text": "cook today",
-        "completed": false,
-        "order": 2,
-        "dueDate": "2025-07-22T22:30:00.000Z"
-      }
-    ]
-  },
-  "tab_1753204199605": {
-    "name": "eaea",
-    "tasks": []
-  },
   "tab_1753204201538": {
     "name": "eaea",
     "tasks": []
   },
   "tab_1753204202944": {
     "name": "ea",
-    "tasks": []
+    "tasks": [
+      {
+        "id": 1,
+        "text": "play league with louli until 18h",
+        "completed": false,
+        "order": 0,
+        "dueDate": "2025-08-10T17:00:00.000Z"
+      },
+      {
+        "id": 2,
+        "text": "cook dinner today",
+        "completed": false,
+        "order": 1,
+        "dueDate": "2025-08-11T22:05:00.000Z"
+      }
+    ]
   }
 }

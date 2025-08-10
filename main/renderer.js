@@ -212,11 +212,12 @@ function adjustTabSizes() {
     
     if (tabs.length === 0) return;
     
-    // Get actual visible width (viewport width) minus add button width and padding
+    // Get actual visible width (viewport width) minus add button width, sidebar, and padding
     const viewportWidth = window.innerWidth;
     const addBtnWidth = addBtn ? addBtn.offsetWidth : 32;
+    const sidebarWidth = 50; // Account for right sidebar
     const padding = 60; // Account for container padding, gaps, and margins
-    const availableWidth = viewportWidth - addBtnWidth - padding;
+    const availableWidth = viewportWidth - addBtnWidth - sidebarWidth - padding;
     
     // Calculate optimal tab width (matching CSS values)
     const minTabWidth = 20;
