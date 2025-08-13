@@ -107,7 +107,7 @@ const workEndPeriod = document.getElementById('work-end-period');
 
 // Settings configuration
 let settings = {
-    theme: 'light',
+    theme: 'dark',
     timeFormat: '12h',
     accentColor: '#7662cf',
     workEndTime: { hour: 11, minute: 55, period: 'PM' }
@@ -118,6 +118,9 @@ let currentEditTask = null;
 let originalTaskText = '';
 let originalDueDate = null;
 let loaded = false;
+
+// Settings preview management
+let originalSettings = null;
 
 // Tab management
 let currentTabId = null;
@@ -998,6 +1001,38 @@ function applySettings() {
     updateAllTimestamps();
 }
 
+function applyPreviewSettings() {
+    // Apply preview settings without saving
+    const previewSettings = collectSettingsFromUI();
+    
+    // Apply theme
+    document.body.setAttribute('data-theme', previewSettings.theme);
+    
+    // Apply accent color
+    document.documentElement.style.setProperty('--accent-color', previewSettings.accentColor);
+    
+    // Update unsaved changes indicator
+    updateUnsavedIndicator();
+}
+
+function updateUnsavedIndicator() {
+    const unsavedIndicator = document.getElementById('unsaved-indicator');
+    if (!unsavedIndicator || !originalSettings) return;
+    
+    const currentUISettings = collectSettingsFromUI();
+    
+    // Check if any settings have changed
+    const hasChanges = 
+        originalSettings.theme !== currentUISettings.theme ||
+        originalSettings.timeFormat !== currentUISettings.timeFormat ||
+        originalSettings.accentColor !== currentUISettings.accentColor ||
+        originalSettings.workEndTime.hour !== currentUISettings.workEndTime.hour ||
+        originalSettings.workEndTime.minute !== currentUISettings.workEndTime.minute ||
+        originalSettings.workEndTime.period !== currentUISettings.workEndTime.period;
+    
+    unsavedIndicator.style.display = hasChanges ? 'flex' : 'none';
+}
+
 function updateAllTimestamps() {
     // Re-format all due date displays according to current settings
     document.querySelectorAll('.task-due-date').forEach(dueDateSpan => {
@@ -1009,12 +1044,28 @@ function updateAllTimestamps() {
 }
 
 function showSettingsModal() {
+    // Store original settings for cancel/preview functionality
+    originalSettings = { ...settings };
+    
     // Initialize settings UI with current values
     initializeSettingsUI();
     settingsModal.style.display = 'flex';
 }
 
 function hideSettingsModal() {
+    // Restore original settings if not saved
+    if (originalSettings) {
+        settings = { ...originalSettings };
+        applySettings();
+        originalSettings = null;
+    }
+    
+    // Hide unsaved changes indicator
+    const unsavedIndicator = document.getElementById('unsaved-indicator');
+    if (unsavedIndicator) {
+        unsavedIndicator.style.display = 'none';
+    }
+    
     settingsModal.style.display = 'none';
 }
 
@@ -1308,12 +1359,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Settings modal event listeners
     settingsBtn.addEventListener('click', () => {
-        initializeSettingsUI();
-        settingsModal.style.display = 'flex';
+        showSettingsModal(); // Use showSettingsModal to store original settings
     });
     
     settingsCloseBtn.addEventListener('click', () => {
-        settingsModal.style.display = 'none';
+        hideSettingsModal(); // Use hideSettingsModal to restore settings
     });
     
     settingsCancelBtn.addEventListener('click', () => {
@@ -1324,13 +1374,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         settings = { ...settings, ...collectSettingsFromUI() };
         saveSettings();
         applySettings();
+        originalSettings = null; // Clear original settings since we're saving
+        
+        // Hide unsaved changes indicator
+        const unsavedIndicator = document.getElementById('unsaved-indicator');
+        if (unsavedIndicator) {
+            unsavedIndicator.style.display = 'none';
+        }
+        
         settingsModal.style.display = 'none';
     });
     
     // Close modal when clicking outside
     settingsModal.addEventListener('click', (e) => {
         if (e.target === settingsModal) {
-            settingsModal.style.display = 'none';
+            hideSettingsModal(); // Use hideSettingsModal to restore settings
         }
     });
     
@@ -1338,18 +1396,40 @@ document.addEventListener('DOMContentLoaded', async () => {
     themeRadios.forEach(radio => {
         radio.addEventListener('change', (e) => {
             if (e.target.checked) {
-                // Apply theme immediately for preview
-                document.body.setAttribute('data-theme', e.target.value);
+                // Apply preview immediately
+                applyPreviewSettings();
             }
         });
     });
     
-    // Color picker handling
+    // Color picker handling with preview
     colorOptions.forEach(option => {
         option.addEventListener('click', () => {
             colorOptions.forEach(opt => opt.classList.remove('selected'));
             option.classList.add('selected');
+            // Apply preview immediately
+            applyPreviewSettings();
         });
+    });
+    
+    // Time format change listeners
+    timeFormatRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            updateUnsavedIndicator();
+        });
+    });
+    
+    // Work time change listeners
+    workEndHour.addEventListener('change', () => {
+        updateUnsavedIndicator();
+    });
+    
+    workEndMinute.addEventListener('change', () => {
+        updateUnsavedIndicator();
+    });
+    
+    workEndPeriod.addEventListener('change', () => {
+        updateUnsavedIndicator();
     });
     
     // Give a bit more time for everything to render

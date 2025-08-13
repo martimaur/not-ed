@@ -302,8 +302,13 @@
 
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" id="settings-cancel-btn">Cancel</button>
-      <button class="btn btn-primary" id="settings-save-btn">Save Changes</button>
+      <div class="unsaved-indicator" id="unsaved-indicator" style="display: none;">
+        <span class="unsaved-text">• unsaved changes</span>
+      </div>
+      <div class="modal-footer-buttons">
+        <button class="btn btn-secondary" id="settings-cancel-btn">Cancel</button>
+        <button class="btn btn-primary" id="settings-save-btn">Save Changes</button>
+      </div>
     </div>
   </div>
 </div>
