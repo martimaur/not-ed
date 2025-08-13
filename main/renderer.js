@@ -733,7 +733,22 @@ function formatDueDate(dueDateString) {
     const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
     
     const diffDays = Math.floor((due - today) / (24 * 60 * 60 * 1000));
-    const timeStr = dueDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    // Format time based on user preference
+    let timeStr;
+    if (settings.timeFormat === '24h') {
+        timeStr = dueDate.toLocaleTimeString([], { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+        });
+    } else {
+        timeStr = dueDate.toLocaleTimeString([], { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: true 
+        });
+    }
     
     if (diffDays === 0) {
         return `Today ${timeStr}`;
@@ -1005,11 +1020,18 @@ function applyPreviewSettings() {
     // Apply preview settings without saving
     const previewSettings = collectSettingsFromUI();
     
+    // Temporarily update settings for formatting functions
+    const originalTimeFormat = settings.timeFormat;
+    settings.timeFormat = previewSettings.timeFormat;
+    
     // Apply theme
     document.body.setAttribute('data-theme', previewSettings.theme);
     
     // Apply accent color
     document.documentElement.style.setProperty('--accent-color', previewSettings.accentColor);
+    
+    // Update timestamps with new time format
+    updateAllTimestamps();
     
     // Update unsaved changes indicator
     updateUnsavedIndicator();
@@ -1041,6 +1063,11 @@ function updateAllTimestamps() {
             dueDateSpan.textContent = formatDueDate(taskDiv.dataset.dueDate);
         }
     });
+    
+    // Update time display in modal if it's open
+    if (timeDisplay) {
+        updateTimeDisplay();
+    }
 }
 
 function showSettingsModal() {
@@ -1415,7 +1442,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Time format change listeners
     timeFormatRadios.forEach(radio => {
         radio.addEventListener('change', () => {
-            updateUnsavedIndicator();
+            applyPreviewSettings();
         });
     });
     
@@ -1560,9 +1587,21 @@ function updateWheelSelection(wheel, value) {
 }
 
 function updateTimeDisplay() {
-    hourDisplay.textContent = selectedHour.toString().padStart(2, '0');
-    minuteDisplay.textContent = selectedMinute.toString().padStart(2, '0');
-    periodDisplay.textContent = selectedPeriod;
+    if (settings.timeFormat === '24h') {
+        // 24-hour format
+        const hour24 = selectedPeriod === 'PM' && selectedHour !== 12 ? selectedHour + 12 : 
+                      selectedPeriod === 'AM' && selectedHour === 12 ? 0 : selectedHour;
+        hourDisplay.textContent = hour24.toString().padStart(2, '0');
+        minuteDisplay.textContent = selectedMinute.toString().padStart(2, '0');
+        periodDisplay.textContent = ''; // Hide AM/PM in 24h mode
+        periodDisplay.style.display = 'none';
+    } else {
+        // 12-hour format
+        hourDisplay.textContent = selectedHour.toString().padStart(2, '0');
+        minuteDisplay.textContent = selectedMinute.toString().padStart(2, '0');
+        periodDisplay.textContent = selectedPeriod;
+        periodDisplay.style.display = 'inline';
+    }
 }
 
 function setTimeFromDate(date) {
