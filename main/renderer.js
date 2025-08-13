@@ -107,7 +107,7 @@ const workEndPeriod = document.getElementById('work-end-period');
 
 // Settings configuration
 let settings = {
-    theme: 'dark',
+    theme: 'light',
     timeFormat: '12h',
     accentColor: '#7662cf',
     workEndTime: { hour: 11, minute: 55, period: 'PM' }
@@ -1332,6 +1332,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (e.target === settingsModal) {
             settingsModal.style.display = 'none';
         }
+    });
+    
+    // Theme change listeners for immediate preview
+    themeRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                // Apply theme immediately for preview
+                document.body.setAttribute('data-theme', e.target.value);
+            }
+        });
     });
     
     // Color picker handling

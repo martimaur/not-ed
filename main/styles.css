@@ -375,10 +375,10 @@ main {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 16px;
+    gap: 19%;
     flex-shrink: 0;
     transition: all 0.2s ease;
-    width: 240px;
+    width: 220px;
     position: fixed;
     right: 60px; /* Positioned next to the right sidebar */
     top: 101px;
@@ -453,7 +453,7 @@ main {
     gap: 8px;
     flex-shrink: 0;
     transition: all 0.2s ease;
-    width: 240px;
+    width: 220px;
     position: fixed;
     right: 60px; /* Positioned next to the right sidebar */
     top: 180px; /* Below the stats panel with more spacing */
@@ -1579,5 +1579,270 @@ main {
 
 .settings-btn svg {
     transition: transform 0.3s ease;
+}
+
+/* ================================================
+   LIGHT THEME
+   ================================================ */
+
+/* Light Theme Variables */
+[data-theme="light"] {
+    --accent-color: #6b46c1;
+    --secondary-color: #f8f9fa;
+    --text-color: #2d3748;
+    --border-color: #e2e8f0;
+    --light-bg: #fefdfb;
+    --card-bg: #ffffff;
+    --hover-bg: #f7fafc;
+    --sidebar-bg: rgba(248, 249, 250, 0.95);
+}
+
+/* Light Theme Body - High Specificity */
+body[data-theme="light"] {
+    background: 
+        linear-gradient(to bottom, #f5f5f5 0%, transparent 300%),
+        linear-gradient(to top, var(--accent-color) -300%, transparent 120%),
+        #fefdfb !important;
+    color: #2d3748 !important;
+}
+
+/* Light Theme Components */
+[data-theme="light"] .title-bar {
+    background: #f1f5f9;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+[data-theme="light"] .title-bar-control:hover {
+    background: #e2e8f0;
+}
+
+[data-theme="light"] .title-bar-control.close:hover {
+    background: #ef4444;
+}
+
+[data-theme="light"] .tab {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    color: #2d3748;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .tab:hover:not(.active) {
+    background: #f7fafc;
+    border-color: #6b46c1;
+}
+
+[data-theme="light"] .tab.active {
+    background: #6b46c1;
+    color: white;
+    box-shadow: 0 4px 12px rgba(107, 70, 193, 0.25);
+}
+
+[data-theme="light"] .tab-add-btn {
+    background: rgba(248, 249, 250, 0.8);
+    border-color: #e2e8f0;
+    color: #64748b;
+}
+
+[data-theme="light"] .tab-add-btn:hover {
+    background: #f7fafc;
+    border-color: #6b46c1;
+    color: #6b46c1;
+}
+
+[data-theme="light"] #quick-add-input {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    color: #2d3748;
+}
+
+[data-theme="light"] #quick-add-input:focus {
+    border-color: #6b46c1;
+}
+
+[data-theme="light"] .stats-panel,
+[data-theme="light"] .weekly-panel {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .weekly-panel:hover {
+    border-color: #6b46c1;
+    background: #f7fafc;
+}
+
+[data-theme="light"] .task {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .task:hover {
+    background: #f7fafc;
+    border-color: #6b46c1;
+}
+
+[data-theme="light"] .task.completed,
+[data-theme="light"] .task.completed-static {
+    background: #f0fdf4;
+    border-color: #22c55e;
+}
+
+[data-theme="light"] .task.completed:hover,
+[data-theme="light"] .task.completed-static:hover {
+    background: #ecfdf5;
+}
+
+[data-theme="light"] .task-text {
+    color: #1a202c !important;
+}
+
+[data-theme="light"] .task.completed .task-text,
+[data-theme="light"] .task.completed-static .task-text {
+    color: #4a5568 !important;
+}
+
+[data-theme="light"] .task-due-date {
+    color: #4a5568 !important;
+}
+
+[data-theme="light"] .task-due-date.overdue {
+    color: #e53e3e !important;
+}
+
+[data-theme="light"] .task-due-date.due-soon {
+    color: #6b46c1 !important;
+}
+
+[data-theme="light"] .task-due-date.due-today {
+    color: #d69e2e !important;
+}
+
+[data-theme="light"] .task-due-date.completed {
+    color: #38a169 !important;
+}
+
+[data-theme="light"] .task-checkbox {
+    border-color: #e2e8f0;
+}
+
+[data-theme="light"] .task-edit-btn {
+    color: #64748b;
+}
+
+[data-theme="light"] .task-edit-btn:hover {
+    background: #f1f5f9;
+    color: #6b46c1;
+}
+
+[data-theme="light"] .modal-overlay {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] .modal-content {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .edit-task-input,
+[data-theme="light"] .date-input,
+[data-theme="light"] .time-display {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    color: #2d3748;
+}
+
+[data-theme="light"] .time-picker-controls {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .wheel-items {
+    border-color: #e2e8f0;
+}
+
+[data-theme="light"] .wheel-item {
+    color: #2d3748;
+    border-bottom-color: #f1f5f9;
+}
+
+[data-theme="light"] .wheel-item:hover {
+    background: #f7fafc;
+}
+
+[data-theme="light"] .context-menu {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .context-menu-item {
+    color: #2d3748;
+}
+
+[data-theme="light"] .context-menu-item:hover {
+    background: #f7fafc;
+}
+
+[data-theme="light"] .context-menu-separator {
+    background: #e2e8f0;
+}
+
+[data-theme="light"] .right-sidebar {
+    background: rgba(248, 249, 250, 0.95);
+    border-left-color: #e2e8f0;
+}
+
+[data-theme="light"] .settings-btn {
+    color: #64748b;
+}
+
+[data-theme="light"] .settings-btn:hover {
+    background: rgba(107, 70, 193, 0.1);
+    color: #6b46c1;
+}
+
+[data-theme="light"] .right-sidebar:hover {
+    background: rgba(248, 249, 250, 0.98);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-track {
+    background: #fefdfb;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-color: #e2e8f0;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb:active {
+    background: #6b46c1;
+}
+
+[data-theme="light"] .day-number {
+    color: #64748b;
+}
+
+[data-theme="light"] .day-label {
+    color: #94a3b8;
+}
+
+[data-theme="light"] .day-item.current .day-label {
+    color: #6b46c1;
+}
+
+[data-theme="light"] .day-item.current .day-number {
+    color: #6b46c1;
+}
+
+[data-theme="light"] .week-start-indicator {
+    background: linear-gradient(to bottom, #6b46c1, rgba(107, 70, 193, 0.3));
 }
 
