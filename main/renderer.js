@@ -1966,71 +1966,83 @@ function updateTaskStats() {
 
 function updateWeeklyTasks() {
     const today = new Date();
-    const currentDayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const weeklyPanel = document.getElementById('weekly-panel');
     
-    // Initialize counters for each day
-    const dayCounts = {
-        0: 0, // Sunday
-        1: 0, // Monday
-        2: 0, // Tuesday
-        3: 0, // Wednesday
-        4: 0, // Thursday
-        5: 0, // Friday
-        6: 0  // Saturday
-    };
+    // Clear existing content
+    weeklyPanel.innerHTML = '';
     
-    // Count tasks for each day of the week
-    Object.keys(tabs).forEach(tabId => {
-        if (tabs[tabId] && tabs[tabId].tasks) {
-            tabs[tabId].tasks.forEach(task => {
-                if (!task.completed) {
-                    let dateToCheck = null;
-                    
-                    if (task.dueDate) {
-                        dateToCheck = new Date(task.dueDate);
-                    } else if (task.creationDate) {
-                        // For tasks without due dates, use creation date
-                        dateToCheck = new Date(task.creationDate);
-                    }
-                    
-                    if (dateToCheck) {
-                        const dayOfWeek = dateToCheck.getDay();
-                        dayCounts[dayOfWeek]++;
-                    }
-                }
-            });
-        }
-    });
+    // Day abbreviations
+    const dayAbbreviations = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
     
-    // Update the display
-    const dayElements = {
-        0: document.getElementById('sunday-count'),
-        1: document.getElementById('monday-count'),
-        2: document.getElementById('tuesday-count'),
-        3: document.getElementById('wednesday-count'),
-        4: document.getElementById('thursday-count'),
-        5: document.getElementById('friday-count'),
-        6: document.getElementById('saturday-count')
-    };
-    
-    // Update counts and highlight current day
-    Object.keys(dayElements).forEach(day => {
-        const dayNum = parseInt(day);
-        const element = dayElements[dayNum];
-        const dayItem = document.querySelector(`[data-day="${dayNum}"]`);
+    // Generate 7 days: 1 day before, today, and 5 days after
+    for (let i = -1; i <= 5; i++) {
+        const currentDate = new Date(today);
+        currentDate.setDate(today.getDate() + i);
+        currentDate.setHours(0, 0, 0, 0);
         
-        if (element) {
-            element.textContent = dayCounts[dayNum];
+        const endOfDay = new Date(currentDate);
+        endOfDay.setHours(23, 59, 59, 999);
+        
+        // Add week start indicator before Monday
+        if (currentDate.getDay() === 1) { // Monday
+            const weekIndicator = document.createElement('div');
+            weekIndicator.className = 'week-start-indicator';
+            weeklyPanel.appendChild(weekIndicator);
         }
         
-        if (dayItem) {
-            if (dayNum === currentDayOfWeek) {
-                dayItem.classList.add('current');
-            } else {
-                dayItem.classList.remove('current');
+        // Count tasks for this specific date
+        let taskCount = 0;
+        Object.keys(tabs).forEach(tabId => {
+            if (tabs[tabId] && tabs[tabId].tasks) {
+                tabs[tabId].tasks.forEach(task => {
+                    if (!task.completed) {
+                        let dateToCheck = null;
+                        
+                        if (task.dueDate) {
+                            dateToCheck = new Date(task.dueDate);
+                        } else if (task.creationDate) {
+                            // For tasks without due dates, use creation date
+                            dateToCheck = new Date(task.creationDate);
+                        }
+                        
+                        if (dateToCheck) {
+                            // Check if task falls on this specific date
+                            if (dateToCheck >= currentDate && dateToCheck <= endOfDay) {
+                                taskCount++;
+                            }
+                        }
+                    }
+                });
             }
+        });
+        
+        // Create day element
+        const dayItem = document.createElement('div');
+        dayItem.className = 'day-item';
+        if (i === 0) {
+            dayItem.classList.add('current'); // Today
         }
-    });
+        
+        // Day number
+        const dayNumber = document.createElement('div');
+        dayNumber.className = 'day-number';
+        dayNumber.textContent = currentDate.getDate();
+        dayItem.appendChild(dayNumber);
+        
+        // Day label (abbreviation)
+        const dayLabel = document.createElement('div');
+        dayLabel.className = 'day-label';
+        dayLabel.textContent = dayAbbreviations[currentDate.getDay()];
+        dayItem.appendChild(dayLabel);
+        
+        // Task count
+        const dayCount = document.createElement('div');
+        dayCount.className = 'day-count';
+        dayCount.textContent = taskCount;
+        dayItem.appendChild(dayCount);
+        
+        weeklyPanel.appendChild(dayItem);
+    }
 }
 
 // Purge completed tasks from previous days
