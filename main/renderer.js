@@ -385,8 +385,9 @@ function loadTabTasks(tabId) {
         console.log(`No tasks found for tab ${tabId} or tab doesn't exist`);
     }
     
-    // Update stats after loading tasks
-    updateTaskStats();
+    // Update stats after loading tasks (direct call since this is just tab switching, not modification)
+    // updateTaskStats();
+    // updateWeeklyTasks();
 }
 
 function startTabRename(tabElement, tabId) {
@@ -656,6 +657,18 @@ document.addEventListener('keydown', (e) => {
 
 // Debounce object to prevent rapid clicks
 const toggleDebounce = new Map();
+
+// Custom event system for task modifications
+function dispatchTasksModified() {
+    const event = new CustomEvent('tasks-modified');
+    document.dispatchEvent(event);
+}
+
+// Subscribe to tasks-modified event for stats updates
+document.addEventListener('tasks-modified', () => {
+    updateTaskStats();
+    updateWeeklyTasks();
+});
 
 
 // Function to collect all tasks from the DOM and convert to JSON
@@ -1260,8 +1273,11 @@ function doAddTask() {
         taskList.appendChild(taskDiv);
         quickAddInput.value = '';
         
-        // Update stats after adding new task
-        updateTaskStats();
+        // Save tasks to tabs object
+        saveCurrentTabTasks();
+        
+        // Dispatch tasks modified event
+        dispatchTasksModified();
         
         // Tasks will be saved when app closes
     }
@@ -1796,15 +1812,23 @@ function hideEditModal() {
     originalDueDate = null;
     taskHasDateSet = false;
     
-    // Update stats after editing task
-    updateTaskStats();
+    // Save tasks to tabs object
+    saveCurrentTabTasks();
+    
+    // Dispatch tasks modified event
+    dispatchTasksModified();
 }
 
 function deleteTask() {
     if (currentEditTask) {
         currentEditTask.taskDiv.remove();
-        // Update stats after deleting task
-        updateTaskStats();
+        
+        // Save tasks to tabs object
+        saveCurrentTabTasks();
+        
+        // Dispatch tasks modified event
+        dispatchTasksModified();
+        
         // Tasks will be saved when app closes
         editModal.style.display = 'none';
         editModalContent.classList.remove('modified');
@@ -1863,8 +1887,8 @@ function toggleTaskCompletion(taskDiv, checkbox) {
     // Save the current tab tasks to persist the changes
     saveCurrentTabTasks();
     
-    // Update stats after task change (already called in saveCurrentTabTasks, but keeping for safety)
-    updateTaskStats();
+    // Dispatch tasks modified event
+    dispatchTasksModified();
     
     // Tasks will be saved when app closes
 }
@@ -1890,12 +1914,20 @@ function updateTaskStats() {
                 }
                 
                 // Count today's tasks
+                let dateToCheck = null;
+                
                 if (task.dueDate) {
-                    const dueDate = new Date(task.dueDate);
-                    const dueDateOnly = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+                    dateToCheck = new Date(task.dueDate);
+                } else if (task.creationDate) {
+                    // For tasks without due dates, use creation date
+                    dateToCheck = new Date(task.creationDate);
+                }
+                
+                if (dateToCheck) {
+                    const dateOnly = new Date(dateToCheck.getFullYear(), dateToCheck.getMonth(), dateToCheck.getDate());
                     
-                    // Check if task is due today
-                    if (dueDateOnly.getTime() === todayStart.getTime()) {
+                    // Check if task is due/created today
+                    if (dateOnly.getTime() === todayStart.getTime()) {
                         tasksDueToday++;
                         if (task.completed) {
                             tasksCompletedToday++;
@@ -1951,10 +1983,20 @@ function updateWeeklyTasks() {
     Object.keys(tabs).forEach(tabId => {
         if (tabs[tabId] && tabs[tabId].tasks) {
             tabs[tabId].tasks.forEach(task => {
-                if (task.dueDate && !task.completed) {
-                    const dueDate = new Date(task.dueDate);
-                    const dayOfWeek = dueDate.getDay();
-                    dayCounts[dayOfWeek]++;
+                if (!task.completed) {
+                    let dateToCheck = null;
+                    
+                    if (task.dueDate) {
+                        dateToCheck = new Date(task.dueDate);
+                    } else if (task.creationDate) {
+                        // For tasks without due dates, use creation date
+                        dateToCheck = new Date(task.creationDate);
+                    }
+                    
+                    if (dateToCheck) {
+                        const dayOfWeek = dateToCheck.getDay();
+                        dayCounts[dayOfWeek]++;
+                    }
                 }
             });
         }
@@ -2034,10 +2076,9 @@ function purgeCompletedTasks() {
     });
     
     if (tasksRemoved) {
-        // Reload current tab's tasks and update stats
+        // Reload current tab's tasks and dispatch tasks modified event
         loadTabTasks(currentTabId);
-        updateTaskStats();
-        updateWeeklyTasks();
+        dispatchTasksModified();
         saveTabs();
     }
 }
