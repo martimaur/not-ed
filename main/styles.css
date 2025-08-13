@@ -381,15 +381,15 @@ main {
     min-width: 180px;
     position: fixed;
     right: 60px; /* Positioned next to the right sidebar */
-    top: 80px;
+    top: 101px;
     z-index: 998;
     text-align: center;
 }
 
-.stats-panel:hover {
+/* .stats-panel:hover {
     border-color: var(--accent-color);
     background: #3a3a3a;
-}
+} */
 
 .stat-row {
     display: flex;
@@ -456,7 +456,7 @@ main {
     min-width: 180px;
     position: fixed;
     right: 60px; /* Positioned next to the right sidebar */
-    top: 140px; /* Below the stats panel */
+    top: 180px; /* Below the stats panel with more spacing */
     z-index: 998;
     text-align: center;
 }
@@ -1532,17 +1532,23 @@ main {
     height: 38px;
 }
 
+.settings-btn:hover {
+    background: rgba(118, 98, 207, 0.2);
+    color: var(--accent-color);
+    transform: scale(1.05);
+}
+
+.settings-btn:hover svg {
+    transform: rotate(45deg);
+}
+
 .right-sidebar:hover {
     background: rgba(42, 42, 42, 0.98);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
 }
 
-.right-sidebar:hover .settings-btn {
-    background: rgba(118, 98, 207, 0.2);
-    color: var(--accent-color);
-    transform: scale(1.05);
-}
+
 
 .settings-btn:active {
     transform: scale(0.95);
@@ -1552,6 +1558,3 @@ main {
     transition: transform 0.3s ease;
 }
 
-.right-sidebar:hover .settings-btn svg {
-    transform: rotate(45deg);
-}

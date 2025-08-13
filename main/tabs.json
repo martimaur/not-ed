@@ -16,13 +16,6 @@
         "completed": false,
         "order": 0,
         "dueDate": "2025-08-10T17:00:00.000Z"
-      },
-      {
-        "id": 2,
-        "text": "cook dinner today",
-        "completed": true,
-        "order": 1,
-        "dueDate": "2025-08-11T22:05:00.000Z"
       }
     ]
   }
