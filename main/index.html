@@ -300,6 +300,47 @@
         </div>
       </div>
 
+      <!-- Notifications Setting -->
+      <div class="setting-section">
+        <h3 class="setting-title">Notifications</h3>
+        <div class="setting-item">
+          <label class="setting-label">Desktop Notifications</label>
+          <div class="setting-control">
+            <div class="notification-toggle">
+              <input type="checkbox" id="notifications-enabled" checked>
+              <label for="notifications-enabled" class="toggle-option">Enable notifications for upcoming tasks</label>
+            </div>
+          </div>
+        </div>
+        
+        <div class="setting-item">
+          <label class="setting-label">Notification Timing</label>
+          <div class="setting-control">
+            <div class="notification-timing">
+              <div class="timing-item">
+                <input type="checkbox" id="notify-1hour" checked>
+                <label for="notify-1hour" class="timing-label">1 hour before</label>
+              </div>
+              <div class="timing-item">
+                <input type="checkbox" id="notify-10min" checked>
+                <label for="notify-10min" class="timing-label">10 minutes before</label>
+              </div>
+              <div class="timing-item">
+                <input type="checkbox" id="notify-5min">
+                <label for="notify-5min" class="timing-label">5 minutes before</label>
+              </div>
+              <div class="timing-item">
+                <input type="checkbox" id="notify-ontime">
+                <label for="notify-ontime" class="timing-label">When task is due</label>
+              </div>
+            </div>
+            <div class="setting-description">
+              Choose when you want to be notified about upcoming tasks.
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
     <div class="modal-footer">
       <div class="unsaved-indicator" id="unsaved-indicator" style="display: none;">

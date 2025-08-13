@@ -105,12 +105,26 @@ const workEndHour = document.getElementById('work-end-hour');
 const workEndMinute = document.getElementById('work-end-minute');
 const workEndPeriod = document.getElementById('work-end-period');
 
+// Notification elements
+const notificationsEnabled = document.getElementById('notifications-enabled');
+const notify1Hour = document.getElementById('notify-1hour');
+const notify10Min = document.getElementById('notify-10min');
+const notify5Min = document.getElementById('notify-5min');
+const notifyOnTime = document.getElementById('notify-ontime');
+
 // Settings configuration
 let settings = {
     theme: 'dark',
     timeFormat: '12h',
     accentColor: '#7662cf',
-    workEndTime: { hour: 11, minute: 55, period: 'PM' }
+    workEndTime: { hour: 11, minute: 55, period: 'PM' },
+    notifications: {
+        enabled: false,
+        oneHour: true,
+        tenMinutes: true,
+        fiveMinutes: false,
+        onTime: false
+    }
 };
 
 // Current task being edited
@@ -121,6 +135,11 @@ let loaded = false;
 
 // Settings preview management
 let originalSettings = null;
+
+// Notification system
+let notificationPermission = false;
+let notificationTimers = new Map(); // Track active notification timers
+let notifiedTasks = new Set(); // Track which tasks have been notified
 
 // Tab management
 let currentTabId = null;
@@ -1118,6 +1137,15 @@ function initializeSettingsUI() {
     workEndHour.value = settings.workEndTime.hour;
     workEndMinute.value = settings.workEndTime.minute;
     workEndPeriod.value = settings.workEndTime.period;
+    
+    // Set notification settings
+    if (settings.notifications) {
+        notificationsEnabled.checked = settings.notifications.enabled;
+        notify1Hour.checked = settings.notifications.oneHour;
+        notify10Min.checked = settings.notifications.tenMinutes;
+        notify5Min.checked = settings.notifications.fiveMinutes;
+        notifyOnTime.checked = settings.notifications.onTime;
+    }
 }
 
 function populateWorkTimeSelects() {
@@ -1151,6 +1179,15 @@ function collectSettingsFromUI() {
         hour: parseInt(workEndHour.value),
         minute: parseInt(workEndMinute.value),
         period: workEndPeriod.value
+    };
+    
+    // Get notification settings
+    newSettings.notifications = {
+        enabled: notificationsEnabled.checked,
+        oneHour: notify1Hour.checked,
+        tenMinutes: notify10Min.checked,
+        fiveMinutes: notify5Min.checked,
+        onTime: notifyOnTime.checked
     };
     
     return newSettings;
@@ -1459,6 +1496,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateUnsavedIndicator();
     });
     
+    // Notification change listeners
+    [notificationsEnabled, notify1Hour, notify10Min, notify5Min, notifyOnTime].forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+            updateUnsavedIndicator();
+        });
+    });
+    
+    // Handle notification permission when enabled
+    notificationsEnabled.addEventListener('change', () => {
+        if (notificationsEnabled.checked && !notificationPermission) {
+            requestNotificationPermission();
+        }
+    });
+    
     // Give a bit more time for everything to render
     await new Promise(resolve => setTimeout(resolve, 100));
     
@@ -1467,6 +1518,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Start automatic purging system
     scheduleAutomaticPurge();
+    
+    // Initialize notification system
+    startNotificationSystem();
     
     console.log('Sending renderer-ready signal...');
     // Tell main process that we're ready to show the window
@@ -2245,4 +2299,202 @@ function ensureTaskHasDate(taskData) {
         taskData.creationDate = new Date().toISOString();
     }
     return taskData;
+}
+
+// Notification system functions
+async function requestNotificationPermission() {
+    try {
+        const permission = await Notification.requestPermission();
+        notificationPermission = permission === 'granted';
+        return notificationPermission;
+    } catch (error) {
+        console.log('Notifications not supported or error requesting permission:', error);
+        notificationPermission = false;
+        return false;
+    }
+}
+
+function showNotification(task, timeUntilDue) {
+    if (!notificationPermission || !settings.notifications?.enabled) return;
+    
+    const title = 'Task Due Soon';
+    let body;
+    
+    if (timeUntilDue >= -1 && timeUntilDue <= 1) {
+        body = `Task "${task.text}" is due now!`;
+    } else if (timeUntilDue >= 4 && timeUntilDue <= 6) {
+        body = `Task "${task.text}" is due in 5 minutes`;
+    } else if (timeUntilDue >= 9 && timeUntilDue <= 11) {
+        body = `Task "${task.text}" is due in 10 minutes`;
+    } else if (timeUntilDue >= 59 && timeUntilDue <= 61) {
+        body = `Task "${task.text}" is due in 1 hour`;
+    } else {
+        // Fallback for any edge cases
+        if (timeUntilDue <= 0) {
+            body = `Task "${task.text}" is overdue`;
+        } else {
+            body = `Task "${task.text}" is due in ${timeUntilDue} minutes`;
+        }
+    }
+    
+    const notification = new Notification(title, {
+        body: body,
+        icon: './assets/notedLogo.svg',
+        tag: `task-${task.id}`, // Prevent duplicate notifications
+        requireInteraction: false
+    });
+    
+    // Auto close after 5 seconds
+    setTimeout(() => notification.close(), 5000);
+    
+    // Focus window when clicked
+    notification.onclick = () => {
+        window.focus();
+        findAndHighlightTask(task.id);
+        notification.close();
+    };
+}
+
+function findAndHighlightTask(taskId) {
+    // First, check if task is in current tab
+    let taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+    
+    if (taskElement) {
+        // Task is in current tab, just highlight it
+        highlightTask(taskElement);
+        return;
+    }
+    
+    // Task is not in current tab, search through all tabs
+    for (const tab of tabs) {
+        const tabTasks = tab.tasks || [];
+        const foundTask = tabTasks.find(t => t.id === taskId);
+        
+        if (foundTask) {
+            // Switch to the tab containing this task
+            console.log(`Switching to tab "${tab.name}" to highlight task`);
+            switchToTab(tab.id);
+            
+            // Wait a moment for tab to load, then highlight
+            setTimeout(() => {
+                taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+                if (taskElement) {
+                    highlightTask(taskElement);
+                } else {
+                    console.log('Task element not found after tab switch:', taskId);
+                }
+            }, 200);
+            return;
+        }
+    }
+    
+    console.log('Task not found in any tab:', taskId);
+}
+
+function highlightTask(taskElement) {
+    // Remove any existing highlights
+    document.querySelectorAll('.task.highlighted').forEach(el => {
+        el.classList.remove('highlighted');
+    });
+    
+    // Add highlight to the target task
+    taskElement.classList.add('highlighted');
+    
+    // Scroll the task into view
+    taskElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    // Remove highlight after 3 seconds
+    setTimeout(() => {
+        taskElement.classList.remove('highlighted');
+    }, 3000);
+}
+
+function checkTaskNotifications() {
+    if (!settings.notifications?.enabled || !notificationPermission) return;
+    
+    const now = new Date();
+    const tasks = getAllTasks();
+    
+    tasks.forEach(task => {
+        if (task.completed || !task.dueDate) return;
+        
+        const dueDate = new Date(task.dueDate);
+        const timeDiff = dueDate.getTime() - now.getTime();
+        const minutesUntilDue = Math.floor(timeDiff / (1000 * 60));
+        
+        // Only process tasks that are due in the future or exactly now  
+        if (minutesUntilDue < -5) return; // Skip tasks more than 5 minutes overdue
+        
+        const taskKey = `${task.id}-notification`;
+        
+        // Skip if already notified for this task
+        if (notifiedTasks.has(taskKey)) return;
+        
+        let shouldNotify = false;
+        let notificationType = '';
+        
+        // Check exact notification windows
+        if (minutesUntilDue >= -1 && minutesUntilDue <= 1 && settings.notifications.onTime) {
+            shouldNotify = true;
+            notificationType = 'onTime';
+        } else if (minutesUntilDue >= 4 && minutesUntilDue <= 6 && settings.notifications.fiveMinutes) {
+            shouldNotify = true;
+            notificationType = 'fiveMinutes';
+        } else if (minutesUntilDue >= 9 && minutesUntilDue <= 11 && settings.notifications.tenMinutes) {
+            shouldNotify = true;
+            notificationType = 'tenMinutes';
+        } else if (minutesUntilDue >= 59 && minutesUntilDue <= 61 && settings.notifications.oneHour) {
+            shouldNotify = true;
+            notificationType = 'oneHour';
+        }
+        
+        if (shouldNotify) {
+            console.log(`Sending ${notificationType} notification for task "${task.text}" (${minutesUntilDue} minutes until due)`);
+            showNotification(task, minutesUntilDue);
+            notifiedTasks.add(taskKey);
+            
+            // Clean up notification after some time to allow re-notification if needed
+            setTimeout(() => {
+                notifiedTasks.delete(taskKey);
+            }, 5 * 60 * 1000); // Remove after 5 minutes
+        }
+    });
+}
+
+function getAllTasks() {
+    const tasks = [];
+    
+    // Get tasks from all tabs, not just the currently visible ones
+    for (const tab of tabs) {
+        const tabTasks = tab.tasks || [];
+        tabTasks.forEach(taskData => {
+            if (taskData.dueDate && !taskData.completed) {
+                tasks.push({
+                    id: taskData.id,
+                    text: taskData.text,
+                    completed: taskData.completed,
+                    dueDate: taskData.dueDate,
+                    tabId: tab.id
+                });
+            }
+        });
+    }
+    
+    return tasks;
+}
+
+function startNotificationSystem() {
+    // Clear any old notification states
+    notifiedTasks.clear();
+    
+    // Request permission if notifications are enabled
+    if (settings.notifications?.enabled && !notificationPermission) {
+        requestNotificationPermission();
+    }
+    
+    // Check for notifications every 30 seconds for more precise timing
+    setInterval(checkTaskNotifications, 30000);
+    
+    // Initial check after a short delay to ensure tasks are loaded
+    setTimeout(checkTaskNotifications, 2000);
 }

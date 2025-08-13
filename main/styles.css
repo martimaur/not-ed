@@ -599,6 +599,30 @@ main {
     position: relative;
 }
 
+/* Notification highlight animation */
+.task.highlighted {
+    background: var(--accent-color) !important;
+    border-color: var(--accent-color) !important;
+    box-shadow: 0 0 20px rgba(118, 98, 207, 0.5);
+    animation: highlightPulse 0.6s ease-in-out;
+    transform: scale(1.02);
+}
+
+@keyframes highlightPulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(118, 98, 207, 0.5);
+    }
+    50% {
+        transform: scale(1.03);
+        box-shadow: 0 0 25px rgba(118, 98, 207, 0.8);
+    }
+    100% {
+        transform: scale(1.02);
+        box-shadow: 0 0 20px rgba(118, 98, 207, 0.5);
+    }
+}
+
 .task.completed::before {
     content: '';
     position: absolute;
@@ -1544,6 +1568,50 @@ main {
     min-width: 60px;
 }
 
+/* Notification Settings */
+.notification-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.notification-toggle input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent-color);
+}
+
+.toggle-option {
+    font-size: 14px;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.notification-timing {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.timing-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.timing-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent-color);
+}
+
+.timing-label {
+    font-size: 14px;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
 /* Settings button styling */
 .right-sidebar {
     position: fixed;
@@ -1712,6 +1780,13 @@ body[data-theme="light"] {
     border-color: #22c55e;
 }
 
+[data-theme="light"] .task.highlighted {
+    background: var(--accent-color) !important;
+    border-color: var(--accent-color) !important;
+    color: white !important;
+    box-shadow: 0 0 20px rgba(118, 98, 207, 0.3);
+}
+
 [data-theme="light"] .task.completed:hover,
 [data-theme="light"] .task.completed-static:hover {
     background: #ecfdf5;
@@ -1871,5 +1946,10 @@ body[data-theme="light"] {
 
 [data-theme="light"] .unsaved-text {
     color: #d97706;
+}
+
+[data-theme="light"] .toggle-option,
+[data-theme="light"] .timing-label {
+    color: #2d3748;
 }
 
