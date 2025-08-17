@@ -95,6 +95,7 @@ const repeatSelect = document.getElementById('repeat-select');
 
 // Settings modal elements
 const settingsBtn = document.getElementById('settings-btn');
+const settingsBtnSidebar = document.getElementById('settings-btn-sidebar');
 const settingsModal = document.getElementById('settings-modal');
 const settingsCloseBtn = document.getElementById('settings-close-btn');
 const settingsCancelBtn = document.getElementById('settings-cancel-btn');
@@ -260,7 +261,9 @@ function adjustTabSizes() {
     // Get actual visible width (viewport width) minus add button width, sidebar, and padding
     const viewportWidth = window.innerWidth;
     const addBtnWidth = addBtn ? addBtn.offsetWidth : 32;
-    const sidebarWidth = 50; // Account for right sidebar
+    
+    // Check if sidebar is visible based on viewport width (matching CSS breakpoint)
+    const sidebarWidth = viewportWidth <= 624 ? 0 : 50; // Account for responsive sidebar hiding
     const padding = 60; // Account for container padding, gaps, and margins
     const availableWidth = viewportWidth - addBtnWidth - sidebarWidth - padding;
     
@@ -1654,6 +1657,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         showSettingsModal(); // Use showSettingsModal to store original settings
     });
     
+    // Add event listener for sidebar settings button
+    settingsBtnSidebar.addEventListener('click', () => {
+        showSettingsModal(); // Use showSettingsModal to store original settings
+    });
+    
     settingsCloseBtn.addEventListener('click', () => {
         hideSettingsModal(); // Use hideSettingsModal to restore settings
     });
@@ -1774,17 +1782,20 @@ window.addEventListener('resize', () => {
 
 // Add horizontal scrolling support for tab container
 tabContainer.addEventListener('wheel', (e) => {
-    // Prevent default vertical scrolling
-    e.preventDefault();
-    
-    // Calculate scroll amount with smoother sensitivity
-    const scrollAmount = e.deltaY * 3
-    
-    // Apply smooth horizontal scroll
-    tabContainer.scrollTo({
-        left: tabContainer.scrollLeft + scrollAmount,
-        behavior: 'smooth'
-    });
+    // Only handle horizontal scrolling if there are scrollable tabs
+    if (tabContainer.scrollWidth > tabContainer.clientWidth) {
+        // Prevent default vertical scrolling
+        e.preventDefault();
+        
+        // Calculate scroll amount with good sensitivity
+        const scrollAmount = e.deltaY * 2.5;
+        
+        // Apply smooth horizontal scroll
+        tabContainer.scrollTo({
+            left: tabContainer.scrollLeft + scrollAmount,
+            behavior: 'smooth'
+        });
+    }
 }, { passive: false });
 
 // Quick add input functionality

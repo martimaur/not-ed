@@ -9,6 +9,11 @@
     /* Spacing */
     --left-margin: 20px;
     --task-spacing: 10px;
+    
+    /* Panel animation variables */
+    --panels-visible: 1; /* 1 = visible, 0 = hidden */
+    --panel-offset: calc((1 - var(--panels-visible)) * 300px);
+    --main-padding: calc(70px + var(--panels-visible) * 242px); /* 70px base + 242px when panels visible */
 }
 
 /* Basic dark theme for the body */
@@ -186,7 +191,7 @@ body {
     position: fixed;
     top: 40px;
     left: 0;
-    right: 0;
+    right: 50px; /* Account for right sidebar width */
     height: 40px;
     background: transparent;
     z-index: 999;
@@ -210,7 +215,8 @@ body {
     display: flex;
     align-items: center;
     height: 100%;
-    padding: 20;
+    width: 100%;
+    padding: 0 20px;
     gap: 4px;
     overflow-x: auto;
     scrollbar-width: none;
@@ -224,8 +230,8 @@ body {
 .tab {
     display: flex;
     align-items: center;
-    min-width: 80px;
-    max-width: 180px;
+    min-width: 120px; /* Increased minimum width for better readability */
+    max-width: 200px;
     height: 28px;
     padding: 0 12px;
     background: #3a3a3a;
@@ -235,7 +241,7 @@ body {
     transition: all 0.2s ease;
     position: relative;
     user-select: none;
-    flex: 1 1 auto;
+    flex: 0 0 auto; /* Don't allow shrinking below min-width */
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
@@ -289,6 +295,7 @@ body {
     transition: all 0.2s ease;
     color: #888;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.432);
+    flex: 0 0 auto; /* Don't allow the add button to shrink or grow */
 }
 
 .tab-add-btn:hover {
@@ -364,33 +371,36 @@ body {
 /* Main content area */
 main {
     padding-top: 92px;
-    padding-right: 60px; /* Account for right sidebar */
+    padding-right: var(--main-padding);
     height: 100vh;
     overflow-y: auto;
     box-sizing: border-box;
+    transition: padding-right 0.6s ease; /* Smooth transition for padding changes */
 }
 
 /* Quick Add Container */
 .quick-add-container {
-    margin: var(--task-spacing) var(--left-margin);
+    max-width: 600px;
+    margin: 0 0;
     margin-bottom: calc(var(--task-spacing) * 2);
     display: flex;
     align-items: flex-start;
     gap: 20px;
+    transition: all 0.3s ease;
 }
 
 #quick-add-input {
     flex: 1;
-    max-width: 600px;
     background: #2a2a2a;
     border: 2px solid var(--border-color);
     border-radius: 8px;
     padding: 12px 16px;
+    margin: var(--task-spacing) var(--left-margin);
     color: var(--text-color);
     font-size: 14px;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     outline: none;
-    transition: border-color 0.2s ease;
+    transition: all 0.3s ease;
     box-sizing: border-box;
 }
 
@@ -405,19 +415,30 @@ main {
     justify-content: center;
     gap: 19%;
     flex-shrink: 0;
-    transition: all 0.2s ease;
+    transition: all 0.6s ease, transform 0.6s ease, opacity 0.6s ease;
     width: 220px;
     position: fixed;
-    right: 60px; /* Positioned next to the right sidebar */
-    top: 101px;
+    right: 60px;
+    top: 102px;
     z-index: 998;
     text-align: center;
+    transform: translateX(var(--panel-offset));
+    opacity: var(--panels-visible);
 }
 
-/* .stats-panel:hover {
+@keyframes panelSlideIn {
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+.stats-panel:hover {
     border-color: var(--accent-color);
     background: #3a3a3a;
-} */
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 4px 20px rgba(118, 98, 207, 0.3);
+}
 
 .stat-row {
     display: flex;
@@ -480,18 +501,22 @@ main {
     justify-content: center;
     gap: 8px;
     flex-shrink: 0;
-    transition: all 0.2s ease;
+    transition: all 0.6s ease, transform 0.6s ease, opacity 0.6s ease;
     width: 220px;
     position: fixed;
-    right: 60px; /* Positioned next to the right sidebar */
-    top: 180px; /* Below the stats panel with more spacing */
+    right: 60px;
+    top: 177px;
     z-index: 998;
     text-align: center;
+    transform: translateX(var(--panel-offset));
+    opacity: var(--panels-visible);
 }
 
 .weekly-panel:hover {
     border-color: var(--accent-color);
     background: #3a3a3a;
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 4px 20px rgba(118, 98, 207, 0.3);
 }
 
 .day-item {
@@ -565,16 +590,29 @@ main {
     color: #22c55e;
 }
 
-/* Responsive design for stats panel */
-@media (max-width: 768px) {
-    .quick-add-container {
-        flex-direction: column;
-        gap: 12px;
+/* Responsive design for small screens */
+@media (max-width: 624px) {
+    :root {
+        --panels-visible: 0; /* Hide panels smoothly */
     }
     
-    .stats-panel {
-        align-self: stretch;
-        justify-content: center;
+    .right-sidebar {
+        display: none !important;
+    }
+    
+    /* Show floating settings button when sidebar is hidden */
+    .floating-settings-btn {
+        display: flex !important;
+    }
+    
+    .tab-bar {
+        right: 0; /* Remove right margin when sidebar is hidden */
+        transition: right 0.3s ease;
+    }
+    
+    main {
+        padding-right: 20px; /* Reduce right padding when sidebar is hidden */
+        transition: padding 0.3s ease;
     }
 }
 
@@ -1950,6 +1988,20 @@ main {
     height: 38px;
 }
 
+/* Floating settings button (outside sidebar) */
+.floating-settings-btn {
+    position: fixed;
+    right: 6px;
+    bottom: 16px;
+    z-index: 1000;
+    background: rgba(42, 42, 42, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    display: none; /* Hidden by default when sidebar is visible */
+}
+
 .settings-btn:hover {
     background: rgba(118, 98, 207, 0.2);
     color: var(--accent-color);
@@ -2070,7 +2122,7 @@ body[data-theme="light"] {
     border-color: var(--accent-color);
 }
 
-[data-theme="light"] .stats-panel,
+[data-theme="light"] .stats-pane;l,
 [data-theme="light"] .weekly-panel {
     background: #ffffff;
     border-color: #e2e8f0;
