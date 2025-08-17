@@ -15,7 +15,7 @@
 body {
     background: 
         linear-gradient(to bottom, #1f1f1f 0%, transparent 200%),
-        linear-gradient(to top, var(--accent-color) -220%, transparent 90%),
+        linear-gradient(to top, var(--gradient-color, var(--accent-color)) -220%, transparent 90%),
         #1e1e1e;
     min-height: 100vh;
     color: #e5e5e5;
@@ -1238,6 +1238,47 @@ main {
     color: white;
 }
 
+/* Repeat Section */
+.repeat-section {
+    margin-top: 20px;
+}
+
+.repeat-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-color);
+    margin-bottom: 8px;
+}
+
+.repeat-controls {
+    display: flex;
+    gap: 12px;
+}
+
+.repeat-select {
+    flex: 1;
+    background: #2a2a2a;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--text-color);
+    font-size: 14px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.repeat-select:focus {
+    border-color: var(--accent-color);
+}
+
+.repeat-select option {
+    background: #2a2a2a;
+    color: var(--text-color);
+}
+
 .edit-task-input {
     width: 100%;
     background: #1e1e1e;
@@ -1954,7 +1995,7 @@ main {
 body[data-theme="light"] {
     background: 
         linear-gradient(to bottom, #f5f5f5 0%, transparent 300%),
-        linear-gradient(to top, var(--accent-color) -300%, transparent 120%),
+        linear-gradient(to top, var(--gradient-color, var(--accent-color)) -300%, transparent 120%),
         #fefdfb !important;
     color: #2d3748 !important;
 }
@@ -2124,9 +2165,15 @@ body[data-theme="light"] {
 
 [data-theme="light"] .edit-task-input,
 [data-theme="light"] .date-input,
-[data-theme="light"] .time-display {
+[data-theme="light"] .time-display,
+[data-theme="light"] .repeat-select {
     background: #ffffff;
     border-color: #e2e8f0;
+    color: #2d3748;
+}
+
+[data-theme="light"] .repeat-select option {
+    background: #ffffff;
     color: #2d3748;
 }
 

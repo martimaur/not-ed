@@ -90,6 +90,9 @@ const timePickerCancel = document.getElementById('time-picker-cancel');
 const timePickerOk = document.getElementById('time-picker-ok');
 const clearDueBtn = document.getElementById('clear-due-btn');
 
+// Repeat elements
+const repeatSelect = document.getElementById('repeat-select');
+
 // Settings modal elements
 const settingsBtn = document.getElementById('settings-btn');
 const settingsModal = document.getElementById('settings-modal');
@@ -124,6 +127,7 @@ let settings = {
     accentColor: '#7662cf',
     zoomLevel: 100,
     workEndTime: { hour: 11, minute: 55, period: 'PM' },
+    useTabColorForGradient: false,
     notifications: {
         enabled: false,
         oneHour: true,
@@ -393,6 +397,9 @@ function switchToTab(tabId) {
     // Switch to new tab
     currentTabId = tabId;
     loadTabTasks(tabId);
+    
+    // Update gradient color based on new active tab
+    updateGradientColor();
 }
 
 function saveCurrentTabTasks() {
@@ -695,6 +702,11 @@ function setTabColor(tabId, color) {
         }
     }
     
+    // Update gradient color if this is the current tab
+    if (tabId === currentTabId) {
+        updateGradientColor();
+    }
+    
     // Save tabs
     saveTabs();
 }
@@ -801,6 +813,11 @@ function collectTasksAsJSON() {
         // Add due date if it exists
         if (taskDiv.dataset.dueDate) {
             taskData.dueDate = taskDiv.dataset.dueDate;
+        }
+        
+        // Add repeat if it exists
+        if (taskDiv.dataset.repeat) {
+            taskData.repeat = taskDiv.dataset.repeat;
         }
         
         // Add creation date if it exists in dataset, or create one if missing
@@ -1116,12 +1133,87 @@ function saveSettings() {
     }
 }
 
+
+function calculateNextDueDate(originalDate, repeatType) {
+    const nextDate = new Date(originalDate);
+    
+    switch (repeatType) {
+        case 'daily':
+            nextDate.setDate(nextDate.getDate() + 1);
+            break;
+        case 'weekly':
+            nextDate.setDate(nextDate.getDate() + 7);
+            break;
+        case 'monthly':
+            nextDate.setMonth(nextDate.getMonth() + 1);
+            break;
+        case 'yearly':
+            nextDate.setFullYear(nextDate.getFullYear() + 1);
+            break;
+        default:
+            return null;
+    }
+    
+    return nextDate;
+}
+
+// Handle repeat task creation for a single completed task
+function handleRepeatTaskCreation(taskDiv) {
+    const repeat = taskDiv.dataset.repeat;
+    const dueDate = taskDiv.dataset.dueDate;
+    
+    if (repeat && repeat !== 'none' && dueDate) {
+        const originalDueDate = new Date(dueDate);
+        const nextDueDate = calculateNextDueDate(originalDueDate, repeat);
+        
+        if (nextDueDate) {
+            // Get the task text
+            const taskTextSpan = taskDiv.querySelector('.task-text');
+            const taskText = taskTextSpan.textContent;
+            
+            // Create new task data
+            const newTaskData = {
+                id: Date.now() + Math.random(),
+                text: taskText,
+                completed: false,
+                dueDate: nextDueDate.toISOString(),
+                repeat: repeat,
+                order: 999 // Add at end
+            };
+            
+            // Create and add the new task
+            const newTaskDiv = createTaskFromData(newTaskData);
+            taskList.appendChild(newTaskDiv);
+            
+            // Save tasks immediately
+            saveCurrentTabTasks();
+            
+            // Remove repeat from the completed task to prevent multiple recreations
+            delete taskDiv.dataset.repeat;
+        }
+    }
+}
+
+// Update gradient color based on setting and active tab
+function updateGradientColor() {
+    if (settings.useTabColorForGradient && currentTabId && tabs[currentTabId] && tabs[currentTabId].color) {
+        // Use the active tab's color
+        document.documentElement.style.setProperty('--gradient-color', tabs[currentTabId].color);
+    } else {
+        // Use the accent color (fallback)
+        document.documentElement.style.setProperty('--gradient-color', settings.accentColor);
+    }
+}
+
 function applySettings() {
     // Apply theme
     document.body.setAttribute('data-theme', settings.theme);
     
     // Apply accent color
     document.documentElement.style.setProperty('--accent-color', settings.accentColor);
+    
+    // Apply gradient color based on setting
+    updateGradientColor();
     
     // Apply zoom level (not in preview mode)
     if (settings.zoomLevel) {
@@ -1138,13 +1230,18 @@ function applyPreviewSettings() {
     
     // Temporarily update settings for formatting functions
     const originalTimeFormat = settings.timeFormat;
+    const originalUseTabColorForGradient = settings.useTabColorForGradient;
     settings.timeFormat = previewSettings.timeFormat;
+    settings.useTabColorForGradient = previewSettings.useTabColorForGradient;
     
     // Apply theme
     document.body.setAttribute('data-theme', previewSettings.theme);
     
     // Apply accent color
     document.documentElement.style.setProperty('--accent-color', previewSettings.accentColor);
+    
+    // Apply gradient color based on preview setting
+    updateGradientColor();
     
     // Apply zoom level for preview (without updating settings)
     if (previewSettings.zoomLevel) {
@@ -1255,6 +1352,12 @@ function initializeSettingsUI() {
         }
         updateZoomMarks(settings.zoomLevel);
     }
+    
+    // Set tab color gradient setting
+    const tabColorGradientToggle = document.getElementById('tab-color-gradient-toggle');
+    if (tabColorGradientToggle) {
+        tabColorGradientToggle.checked = settings.useTabColorForGradient;
+    }
 }
 
 function populateWorkTimeSelects() {
@@ -1304,6 +1407,12 @@ function collectSettingsFromUI() {
         newSettings.zoomLevel = parseInt(zoomSlider.value);
     }
     
+    // Get tab color gradient setting
+    const tabColorGradientToggle = document.getElementById('tab-color-gradient-toggle');
+    if (tabColorGradientToggle) {
+        newSettings.useTabColorForGradient = tabColorGradientToggle.checked;
+    }
+    
     return newSettings;
 }
 
@@ -1316,6 +1425,11 @@ function createTaskFromData(taskData) {
     // Store due date in dataset if it exists
     if (taskData.dueDate) {
         taskDiv.dataset.dueDate = taskData.dueDate;
+    }
+    
+    // Store repeat in dataset if it exists
+    if (taskData.repeat) {
+        taskDiv.dataset.repeat = taskData.repeat;
     }
     
     // Store creation date in dataset if it exists
@@ -1623,6 +1737,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             requestNotificationPermission();
         }
     });
+    
+    // Tab color gradient setting listener
+    const tabColorGradientToggle = document.getElementById('tab-color-gradient-toggle');
+    if (tabColorGradientToggle) {
+        tabColorGradientToggle.addEventListener('change', () => {
+            updateUnsavedIndicator();
+            applyPreviewSettings();
+        });
+    }
     
     // Give a bit more time for everything to render
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -1981,6 +2104,10 @@ function showEditModal(taskDiv, taskTextSpan) {
         setTimeFromDate(null);
     }
     
+    // Set repeat value
+    const currentRepeat = taskDiv.dataset.repeat || 'none';
+    repeatSelect.value = currentRepeat;
+    
     editModal.style.display = 'flex';
     editInput.focus();
     autoResizeTextarea(editInput);
@@ -2096,6 +2223,14 @@ function hideEditModal() {
                 updateTaskDueDateDisplay(currentEditTask.taskDiv, finalDueDate);
             }
             
+            // Update repeat setting
+            const newRepeat = repeatSelect.value;
+            if (newRepeat && newRepeat !== 'none') {
+                currentEditTask.taskDiv.dataset.repeat = newRepeat;
+            } else {
+                delete currentEditTask.taskDiv.dataset.repeat;
+            }
+            
             // Tasks will be saved when app closes
         }
     }
@@ -2177,6 +2312,9 @@ function toggleTaskCompletion(taskDiv, checkbox) {
                 if (dueDateSpan) {
                     dueDateSpan.classList.add('completed');
                 }
+                
+                // Handle repeating task creation
+                handleRepeatTaskCreation(taskDiv);
             }
             toggleDebounce.delete(taskId);
         }, 300);

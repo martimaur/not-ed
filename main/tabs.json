@@ -1,7 +1,18 @@
 {
   "home_1755086825145": {
     "name": "Home",
-    "tasks": []
+    "tasks": [
+      {
+        "id": 1,
+        "text": "cll",
+        "completed": true,
+        "order": 0,
+        "dueDate": "2025-08-17T12:05:00.000Z",
+        "repeat": "daily",
+        "creationDate": "2025-08-17T12:02:43.916Z"
+      }
+    ],
+    "color": "#22c55e"
   },
   "tab_1755086908196": {
     "name": "New Tab",
@@ -10,15 +21,20 @@
   },
   "tab_1755087144791": {
     "name": "New Tab",
+    "tasks": [],
+    "color": "#64748b"
+  },
+  "tab_1755430850394": {
+    "name": "e",
     "tasks": [
       {
         "id": 1,
-        "text": "TIRAR LOICA DA MAQUINA",
-        "completed": false,
+        "text": "eaea",
+        "completed": true,
         "order": 0,
-        "creationDate": "2025-08-13T12:12:45.655Z"
+        "creationDate": "2025-08-17T11:52:18.145Z"
       }
     ],
-    "color": "#ec4899"
+    "color": "#3b82f6"
   }
 }

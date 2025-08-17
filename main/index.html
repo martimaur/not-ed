@@ -155,6 +155,19 @@
             <button type="button" id="clear-due-btn" class="clear-due-btn">Clear</button>
           </div>
         </div>
+        
+        <div class="repeat-section">
+          <label for="repeat-select" class="repeat-label">Repeat</label>
+          <div class="repeat-controls">
+            <select id="repeat-select" class="repeat-select">
+              <option value="none">Don't repeat</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
         <button id="edit-delete-btn" class="btn btn-delete">
@@ -286,6 +299,18 @@
               <div class="color-option" data-color="#06b6d4" style="background: #06b6d4;" title="Cyan"></div>
               <div class="color-option" data-color="#84cc16" style="background: #84cc16;" title="Lime"></div>
             </div>
+          </div>
+        </div>
+        
+        <!-- Tab Color Gradient Setting -->
+        <div class="setting-item">
+          <div class="setting-toggle">
+            <label class="setting-label">Use Tab Color for Background Gradient</label>
+            <input type="checkbox" id="tab-color-gradient-toggle" class="toggle-input">
+            <label for="tab-color-gradient-toggle" class="toggle-label"></label>
+          </div>
+          <div class="setting-description">
+            When enabled, the background gradient will use the active tab's color instead of the accent color
           </div>
         </div>
         
