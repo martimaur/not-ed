@@ -112,11 +112,17 @@ const notify10Min = document.getElementById('notify-10min');
 const notify5Min = document.getElementById('notify-5min');
 const notifyOnTime = document.getElementById('notify-ontime');
 
+// Zoom elements
+const zoomSlider = document.getElementById('zoom-slider');
+const zoomPercentage = document.getElementById('zoom-percentage');
+const zoomMarks = document.querySelectorAll('.zoom-mark');
+
 // Settings configuration
 let settings = {
     theme: 'dark',
     timeFormat: '12h',
     accentColor: '#7662cf',
+    zoomLevel: 100,
     workEndTime: { hour: 11, minute: 55, period: 'PM' },
     notifications: {
         enabled: false,
@@ -1031,6 +1037,11 @@ function applySettings() {
     // Apply accent color
     document.documentElement.style.setProperty('--accent-color', settings.accentColor);
     
+    // Apply zoom level (not in preview mode)
+    if (settings.zoomLevel) {
+        setZoomLevel(settings.zoomLevel, true, false);
+    }
+    
     // Update time displays if needed (this could be expanded later)
     updateAllTimestamps();
 }
@@ -1049,6 +1060,11 @@ function applyPreviewSettings() {
     // Apply accent color
     document.documentElement.style.setProperty('--accent-color', previewSettings.accentColor);
     
+    // Apply zoom level for preview (without updating settings)
+    if (previewSettings.zoomLevel) {
+        setZoomLevel(previewSettings.zoomLevel, true, true); // Use preview mode
+    }
+    
     // Update timestamps with new time format
     updateAllTimestamps();
     
@@ -1062,14 +1078,8 @@ function updateUnsavedIndicator() {
     
     const currentUISettings = collectSettingsFromUI();
     
-    // Check if any settings have changed
-    const hasChanges = 
-        originalSettings.theme !== currentUISettings.theme ||
-        originalSettings.timeFormat !== currentUISettings.timeFormat ||
-        originalSettings.accentColor !== currentUISettings.accentColor ||
-        originalSettings.workEndTime.hour !== currentUISettings.workEndTime.hour ||
-        originalSettings.workEndTime.minute !== currentUISettings.workEndTime.minute ||
-        originalSettings.workEndTime.period !== currentUISettings.workEndTime.period;
+    // Check if any settings have changed by comparing with original settings
+    const hasChanges = JSON.stringify(originalSettings) !== JSON.stringify(currentUISettings);
     
     unsavedIndicator.style.display = hasChanges ? 'flex' : 'none';
 }
@@ -1103,6 +1113,10 @@ function hideSettingsModal() {
     if (originalSettings) {
         settings = { ...originalSettings };
         applySettings();
+        
+        // Restore zoom level specifically
+        setZoomLevel(originalSettings.zoomLevel, true, false); // Apply without preview mode
+        
         originalSettings = null;
     }
     
@@ -1145,6 +1159,15 @@ function initializeSettingsUI() {
         notify10Min.checked = settings.notifications.tenMinutes;
         notify5Min.checked = settings.notifications.fiveMinutes;
         notifyOnTime.checked = settings.notifications.onTime;
+    }
+    
+    // Set zoom level - just set the UI elements directly
+    if (settings.zoomLevel && zoomSlider) {
+        zoomSlider.value = settings.zoomLevel;
+        if (zoomPercentage) {
+            zoomPercentage.textContent = `${settings.zoomLevel}%`;
+        }
+        updateZoomMarks(settings.zoomLevel);
     }
 }
 
@@ -1189,6 +1212,11 @@ function collectSettingsFromUI() {
         fiveMinutes: notify5Min.checked,
         onTime: notifyOnTime.checked
     };
+    
+    // Get zoom level
+    if (zoomSlider) {
+        newSettings.zoomLevel = parseInt(zoomSlider.value);
+    }
     
     return newSettings;
 }
@@ -1431,7 +1459,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     
     settingsCancelBtn.addEventListener('click', () => {
-        settingsModal.style.display = 'none';
+        hideSettingsModal(); // Use hideSettingsModal to restore settings
     });
     
     settingsSaveBtn.addEventListener('click', () => {
@@ -1521,6 +1549,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Initialize notification system
     startNotificationSystem();
+    
+    // Initialize zoom control
+    initializeZoomControl();
     
     console.log('Sending renderer-ready signal...');
     // Tell main process that we're ready to show the window
@@ -2497,4 +2528,148 @@ function startNotificationSystem() {
     
     // Initial check after a short delay to ensure tasks are loaded
     setTimeout(checkTaskNotifications, 2000);
+}
+
+// Zoom functionality
+function setZoomLevel(zoomLevel, snapToNearest = true, isPreview = false) { // Removed suppressUnsavedIndicator parameter
+    // Define valid zoom levels
+    const validZoomLevels = [50, 67, 75, 80, 90, 100, 110, 125, 150, 175, 200];
+    
+    // Always snap to nearest valid level (changed from conditional)
+    zoomLevel = validZoomLevels.reduce((prev, curr) => 
+        Math.abs(curr - zoomLevel) < Math.abs(prev - zoomLevel) ? curr : prev
+    );
+    
+    // Clamp zoom level between 50% and 200% (redundant now but keeping for safety)
+    zoomLevel = Math.max(50, Math.min(200, zoomLevel));
+    
+    // Use Electron's built-in zoom for better performance
+    ipcRenderer.send('window-controls', 'set-zoom', zoomLevel / 100);
+    
+    // Update settings only if not a preview
+    if (!isPreview) {
+        settings.zoomLevel = zoomLevel;
+    }
+    
+    // Update UI
+    if (zoomPercentage) {
+        zoomPercentage.textContent = `${zoomLevel}%`;
+    }
+    
+    if (zoomSlider) {
+        zoomSlider.value = zoomLevel;
+    }
+    
+    // Update zoom marks
+    updateZoomMarks(zoomLevel);
+    
+    // Trigger unsaved indicator when in settings mode
+    if (isPreview && originalSettings) {
+        updateUnsavedIndicator();
+    }
+    
+    return zoomLevel;
+}
+
+function updateZoomMarks(currentZoom) {
+    if (!zoomMarks) return;
+    
+    zoomMarks.forEach(mark => {
+        const markValue = parseInt(mark.dataset.value);
+        if (markValue === currentZoom) {
+            mark.classList.add('active');
+        } else {
+            mark.classList.remove('active');
+        }
+    });
+}
+
+function initializeZoomControl() {
+    if (!zoomSlider || !zoomPercentage) return;
+    
+    // Position zoom marks correctly
+    positionZoomMarks();
+    
+    // Set initial values
+    setZoomLevel(settings.zoomLevel);
+    
+    let isDragging = false;
+    
+    // Mouse down on slider
+    zoomSlider.addEventListener('mousedown', () => {
+        isDragging = true;
+    });
+    
+    // Mouse up anywhere - snap to nearest value
+    document.addEventListener('mouseup', () => {
+        if (isDragging) {
+            isDragging = false;
+            const zoomLevel = parseInt(zoomSlider.value);
+            const snappedLevel = setZoomLevel(zoomLevel, true, true); // Use preview mode
+            zoomSlider.value = snappedLevel;
+        }
+    });
+    
+    // Slider input event - ALWAYS snap to nearest valid value
+    zoomSlider.addEventListener('input', (e) => {
+        const zoomLevel = parseInt(e.target.value);
+        const snappedLevel = setZoomLevel(zoomLevel, true, true); // Use preview mode
+        // Immediately update slider to show snapped value
+        e.target.value = snappedLevel;
+        // Update unsaved indicator
+        if (loaded) {
+            updateUnsavedIndicator();
+        }
+    });
+    
+    // Click on zoom marks to jump to specific values
+    zoomMarks.forEach(mark => {
+        mark.addEventListener('click', () => {
+            const zoomLevel = parseInt(mark.dataset.value);
+            setZoomLevel(zoomLevel, true, true); // Use preview mode
+            if (loaded) {
+                updateUnsavedIndicator();
+            }
+        });
+    });
+    
+    // Keyboard support - snap on arrow key press
+    zoomSlider.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+            // Prevent default to override browser behavior
+            e.preventDefault();
+            
+            const validZoomLevels = [50, 67, 75, 80, 90, 100, 110, 125, 150, 175, 200];
+            const currentZoom = parseInt(zoomSlider.value);
+            const currentIndex = validZoomLevels.findIndex(level => level === currentZoom);
+            
+            let newIndex;
+            if (e.key === 'ArrowLeft') {
+                newIndex = Math.max(0, currentIndex - 1);
+            } else {
+                newIndex = Math.min(validZoomLevels.length - 1, currentIndex + 1);
+            }
+            
+            const newZoom = validZoomLevels[newIndex];
+            setZoomLevel(newZoom, true, true); // Use preview mode
+            zoomSlider.value = newZoom;
+            if (loaded) {
+                updateUnsavedIndicator();
+            }
+        }
+    });
+}
+
+function positionZoomMarks() {
+    if (!zoomMarks) return;
+    
+    const minZoom = 50;
+    const maxZoom = 200;
+    const range = maxZoom - minZoom;
+    
+    zoomMarks.forEach(mark => {
+        const value = parseInt(mark.dataset.value);
+        const percentage = ((value - minZoom) / range) * 100;
+        mark.style.left = `${percentage}%`;
+    });
 }

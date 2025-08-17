@@ -33,7 +33,7 @@ app.whenReady().then(() => {
     });
 
     // Set up IPC handlers for window controls
-    ipcMain.on('window-controls', (event, action) => {
+    ipcMain.on('window-controls', (event, action, data) => {
         switch(action) {
             case 'minimize':
                 myWindow.minimize();
@@ -47,6 +47,11 @@ app.whenReady().then(() => {
                 break;
             case 'close':
                 myWindow.close();
+                break;
+            case 'set-zoom':
+                if (data && typeof data === 'number') {
+                    myWindow.webContents.setZoomFactor(data);
+                }
                 break;
             case 'toggle-pin':
                 const isCurrentlyOnTop = myWindow.isAlwaysOnTop();
@@ -114,6 +119,15 @@ app.whenReady().then(() => {
         } catch (error) {
             console.error('Error loading tabs:', error);
             return { success: false, error: error.message };
+        }
+    });
+
+    // IPC handler for zoom level changes
+    ipcMain.on('set-zoom-level', (event, zoomLevel) => {
+        if (myWindow && myWindow.webContents) {
+            // Set zoom factor (zoomLevel is percentage, so divide by 100)
+            const zoomFactor = zoomLevel / 100;
+            myWindow.webContents.setZoomFactor(zoomFactor);
         }
     });
 

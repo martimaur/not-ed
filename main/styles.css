@@ -1502,6 +1502,148 @@ main {
     text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
 }
 
+/* Zoom Control */
+.zoom-control {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.zoom-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.zoom-description {
+    color: #a0a0a0;
+    font-size: 12px;
+}
+
+.zoom-percentage {
+    color: var(--accent-color);
+    font-weight: 600;
+    font-size: 14px;
+    min-width: 45px;
+    text-align: right;
+}
+
+.zoom-slider-container {
+    position: relative;
+    padding: 0 9px; /* Account for slider thumb width */
+}
+
+.zoom-marks {
+    display: flex;
+    position: relative;
+    margin-bottom: 8px;
+    height: 20px;
+    width: 100%;
+}
+
+.zoom-mark {
+    font-size: 10px;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    position: absolute;
+    padding: 2px 4px;
+    border-radius: 3px;
+    transform: translateX(-50%);
+    top: 0;
+}
+
+.zoom-mark:hover {
+    color: var(--accent-color);
+    background: rgba(118, 98, 207, 0.1);
+}
+
+.zoom-mark.active {
+    color: var(--accent-color);
+    font-weight: 600;
+    background: var(--accent-color);
+    color: white;
+    transform: scale(1.1);
+}
+
+.zoom-slider {
+    width: 100%;
+    height: 6px;
+    background: #3a3a3a;
+    border-radius: 3px;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    position: relative;
+}
+
+.zoom-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    background: var(--accent-color);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid #1e1e1e;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.zoom-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 12px rgba(118, 98, 207, 0.5);
+}
+
+.zoom-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: var(--accent-color);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid #1e1e1e;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+}
+
+.zoom-slider::-moz-range-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 12px rgba(118, 98, 207, 0.5);
+}
+
+/* Light theme zoom styles */
+[data-theme="light"] .zoom-slider {
+    background: #e2e8f0;
+}
+
+[data-theme="light"] .zoom-slider::-webkit-slider-thumb {
+    border-color: #ffffff;
+}
+
+[data-theme="light"] .zoom-slider::-moz-range-thumb {
+    border-color: #ffffff;
+}
+
+[data-theme="light"] .zoom-mark {
+    color: #64748b;
+}
+
+[data-theme="light"] .zoom-mark:hover {
+    background: rgba(118, 98, 207, 0.1);
+}
+
+[data-theme="light"] .zoom-mark.active {
+    background: var(--accent-color);
+    color: white;
+}
+
+[data-theme="light"] .zoom-description {
+    color: #64748b;
+}
+
 /* Time Format Toggle */
 .time-format-toggle {
     display: flex;
@@ -1951,5 +2093,22 @@ body[data-theme="light"] {
 [data-theme="light"] .toggle-option,
 [data-theme="light"] .timing-label {
     color: #2d3748;
+}
+
+/* Light theme work time picker */
+[data-theme="light"] .time-select,
+[data-theme="light"] .period-select {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    color: #2d3748;
+}
+
+[data-theme="light"] .time-select:focus,
+[data-theme="light"] .period-select:focus {
+    border-color: var(--accent-color);
+}
+
+[data-theme="light"] .time-separator {
+    color: #64748b;
 }
 

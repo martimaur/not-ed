@@ -256,6 +256,35 @@
             </div>
           </div>
         </div>
+        
+        <!-- Zoom Level Setting -->
+        <div class="setting-item">
+          <label class="setting-label">Zoom Level</label>
+          <div class="setting-control">
+            <div class="zoom-control">
+              <div class="zoom-info">
+                <span class="zoom-description">Control the zoom level to adjust the size of the interface</span>
+                <span class="zoom-percentage" id="zoom-percentage">100%</span>
+              </div>
+              <div class="zoom-slider-container">
+                <div class="zoom-marks">
+                  <span class="zoom-mark" data-value="50">50</span>
+                  <span class="zoom-mark" data-value="67">67</span>
+                  <span class="zoom-mark" data-value="75">75</span>
+                  <span class="zoom-mark" data-value="80">80</span>
+                  <span class="zoom-mark" data-value="90">90</span>
+                  <span class="zoom-mark" data-value="100">100</span>
+                  <span class="zoom-mark" data-value="110">110</span>
+                  <span class="zoom-mark" data-value="125">125</span>
+                  <span class="zoom-mark" data-value="150">150</span>
+                  <span class="zoom-mark" data-value="175">175</span>
+                  <span class="zoom-mark" data-value="200">200</span>
+                </div>
+                <input type="range" id="zoom-slider" class="zoom-slider" min="50" max="200" value="100" step="1">
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Time Format Setting -->

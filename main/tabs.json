@@ -1,31 +1,7 @@
 {
   "home_1755086825145": {
     "name": "Home",
-    "tasks": [
-      {
-        "id": 1,
-        "text": "Enviar file e$o",
-        "completed": false,
-        "order": 0,
-        "dueDate": "2025-08-13T12:05:00.000Z",
-        "creationDate": "2025-08-13T12:07:38.477Z"
-      },
-      {
-        "id": 2,
-        "text": "olas  adi9o oF",
-        "completed": false,
-        "order": 1,
-        "dueDate": "2025-08-14T12:10:00.000Z",
-        "creationDate": "2025-08-13T12:08:08.099Z"
-      },
-      {
-        "id": 3,
-        "text": "15H COMIDA",
-        "completed": false,
-        "order": 2,
-        "dueDate": "2025-08-13T14:00:00.000Z"
-      }
-    ]
+    "tasks": []
   },
   "tab_1755086908196": {
     "name": "New Tab",
