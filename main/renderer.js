@@ -693,7 +693,7 @@ function setTabColor(tabId, color) {
         delete tabs[tabId].color;
     }
     
-    // Update tab element
+    // Update tab element with smooth transition
     const tabElement = document.querySelector(`[data-tab-id="${tabId}"]`);
     if (tabElement) {
         if (color) {
@@ -705,13 +705,15 @@ function setTabColor(tabId, color) {
         }
     }
     
-    // Update gradient color if this is the current tab
+    // Update gradient color smoothly if this is the current tab
     if (tabId === currentTabId) {
-        updateGradientColor();
+        // Use requestAnimationFrame for smoother updates
+        requestAnimationFrame(() => {
+            updateGradientColor();
+        });
     }
     
-    // Save tabs
-    saveTabs();
+    // Don't save immediately - only save on app exit
 }
 
 // Add tab button event
@@ -1778,6 +1780,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Add window resize listener to adjust tab sizes
 window.addEventListener('resize', () => {
     adjustTabSizes();
+});
+
+// Save tabs when the app is about to close
+window.addEventListener('beforeunload', () => {
+    saveTabs();
 });
 
 // Add horizontal scrolling support for tab container
