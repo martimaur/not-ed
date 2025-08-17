@@ -192,6 +192,16 @@
     </svg>
     Clear Tasks
   </button>
+  <button class="context-menu-item" id="context-color">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="13.5" cy="6.5" r=".5"/>
+      <circle cx="17.5" cy="10.5" r=".5"/>
+      <circle cx="8.5" cy="7.5" r=".5"/>
+      <circle cx="6.5" cy="12.5" r=".5"/>
+      <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+    </svg>
+    Set Color
+  </button>
   <div class="context-menu-separator"></div>
   <button class="context-menu-item danger" id="context-delete">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -203,6 +213,28 @@
     </svg>
     Delete Tab
   </button>
+</div>
+
+<!-- Tab Color Picker Modal -->
+<div class="tab-color-modal" id="tab-color-modal" style="display: none;">
+  <div class="tab-color-content">
+    <div class="tab-color-header">
+      <h3>Choose Tab Color</h3>
+      <button class="tab-color-close" id="tab-color-close">&times;</button>
+    </div>
+    <div class="tab-color-grid">
+      <div class="tab-color-option default" data-color="" title="Default"></div>
+      <div class="tab-color-option" data-color="#ef4444" style="background-color: #ef4444;" title="Red"></div>
+      <div class="tab-color-option" data-color="#f97316" style="background-color: #f97316;" title="Orange"></div>
+      <div class="tab-color-option" data-color="#eab308" style="background-color: #eab308;" title="Yellow"></div>
+      <div class="tab-color-option" data-color="#22c55e" style="background-color: #22c55e;" title="Green"></div>
+      <div class="tab-color-option" data-color="#06b6d4" style="background-color: #06b6d4;" title="Cyan"></div>
+      <div class="tab-color-option" data-color="#3b82f6" style="background-color: #3b82f6;" title="Blue"></div>
+      <div class="tab-color-option" data-color="#8b5cf6" style="background-color: #8b5cf6;" title="Purple"></div>
+      <div class="tab-color-option" data-color="#ec4899" style="background-color: #ec4899;" title="Pink"></div>
+      <div class="tab-color-option" data-color="#64748b" style="background-color: #64748b;" title="Gray"></div>
+    </div>
+  </div>
 </div>
 
 <!-- Settings Modal -->

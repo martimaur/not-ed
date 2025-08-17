@@ -5,7 +5,8 @@
   },
   "tab_1755086908196": {
     "name": "New Tab",
-    "tasks": []
+    "tasks": [],
+    "color": "#eab308"
   },
   "tab_1755087144791": {
     "name": "New Tab",
@@ -17,6 +18,7 @@
         "order": 0,
         "creationDate": "2025-08-13T12:12:45.655Z"
       }
-    ]
+    ],
+    "color": "#ec4899"
   }
 }

@@ -159,8 +159,15 @@ const tabContainer = document.querySelector('.tab-container');
 const contextMenu = document.getElementById('context-menu');
 const contextRename = document.getElementById('context-rename');
 const contextClear = document.getElementById('context-clear');
+const contextColor = document.getElementById('context-color');
 const contextDelete = document.getElementById('context-delete');
 let contextMenuTarget = null;
+
+// Tab color picker elements
+const tabColorModal = document.getElementById('tab-color-modal');
+const tabColorClose = document.getElementById('tab-color-close');
+const tabColorOptions = document.querySelectorAll('.tab-color-option');
+let currentColorTabId = null;
 
 // Function to ensure we always have at least one tab
 function ensureHomeTabExists() {
@@ -192,11 +199,17 @@ function ensureHomeTabExists() {
 }
 
 // Tab functionality
-function createTab(id, name) {
+function createTab(id, name, color = null) {
     const tab = document.createElement('div');
     tab.className = 'tab';
     tab.setAttribute('data-tab-id', id);
     tab.draggable = true; // Make tab draggable
+    
+    // Set tab color if provided
+    if (color) {
+        tab.setAttribute('data-color', color);
+        tab.style.setProperty('--tab-color', color);
+    }
     
     tab.innerHTML = `
         <span class="tab-name">${name}</span>
@@ -514,7 +527,7 @@ async function loadTabs() {
             
             // Create tab elements for all saved tabs
             Object.keys(tabs).forEach(tabId => {
-                createTab(tabId, tabs[tabId].name);
+                createTab(tabId, tabs[tabId].name, tabs[tabId].color);
             });
             
             // Switch to the saved current tab if it exists
@@ -639,6 +652,53 @@ function clearTabTasks(tabId) {
     }
 }
 
+// Tab color functions
+function showTabColorPicker(tabId) {
+    currentColorTabId = tabId;
+    
+    // Update selected color in picker
+    const currentColor = tabs[tabId]?.color || '';
+    tabColorOptions.forEach(option => {
+        option.classList.remove('selected');
+        if (option.dataset.color === currentColor) {
+            option.classList.add('selected');
+        }
+    });
+    
+    tabColorModal.style.display = 'flex';
+}
+
+function hideTabColorPicker() {
+    tabColorModal.style.display = 'none';
+    currentColorTabId = null;
+}
+
+function setTabColor(tabId, color) {
+    if (!tabs[tabId]) return;
+    
+    // Update tab data
+    if (color) {
+        tabs[tabId].color = color;
+    } else {
+        delete tabs[tabId].color;
+    }
+    
+    // Update tab element
+    const tabElement = document.querySelector(`[data-tab-id="${tabId}"]`);
+    if (tabElement) {
+        if (color) {
+            tabElement.setAttribute('data-color', color);
+            tabElement.style.setProperty('--tab-color', color);
+        } else {
+            tabElement.removeAttribute('data-color');
+            tabElement.style.removeProperty('--tab-color');
+        }
+    }
+    
+    // Save tabs
+    saveTabs();
+}
+
 // Add tab button event
 addTaskBtn.addEventListener('click', addNewTab);
 
@@ -664,6 +724,31 @@ contextDelete.addEventListener('click', () => {
     }
 });
 
+contextColor.addEventListener('click', () => {
+    if (contextMenuTarget) {
+        showTabColorPicker(contextMenuTarget.id);
+        hideContextMenu();
+    }
+});
+
+// Tab color picker event listeners
+tabColorClose.addEventListener('click', hideTabColorPicker);
+
+tabColorOptions.forEach(option => {
+    option.addEventListener('click', () => {
+        const color = option.dataset.color;
+        setTabColor(currentColorTabId, color);
+        hideTabColorPicker();
+    });
+});
+
+// Hide color picker when clicking outside
+tabColorModal.addEventListener('click', (e) => {
+    if (e.target === tabColorModal) {
+        hideTabColorPicker();
+    }
+});
+
 // Hide context menu when clicking elsewhere
 document.addEventListener('click', (e) => {
     if (!contextMenu.contains(e.target)) {
@@ -675,6 +760,7 @@ document.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         hideContextMenu();
+        hideTabColorPicker();
         
         // Also hide edit modal if it's open
         if (editModal.style.display === 'flex') {

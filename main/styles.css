@@ -249,6 +249,7 @@ body {
 .tab:hover:not(.active) {
     background: #4a4a4a;
     border-color: var(--accent-color);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--accent-color) 25%, transparent);
 }
 
 .tab-name {
@@ -331,6 +332,33 @@ body {
     border-radius: 2px;
     z-index: 10;
     box-shadow: 0 0 6px var(--accent-color);
+}
+
+/* Colored Tab Styles */
+.tab[data-color] {
+    position: relative;
+}
+
+.tab[data-color]:not(.active) {
+    background: #3a3a3a;
+    border: 1px solid var(--tab-color, #666);
+    border-left: 5px solid var(--tab-color, #666);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--tab-color) 25%, transparent);
+}
+
+.tab[data-color].active {
+    background: var(--tab-color);
+    border: 1px solid var(--tab-color);
+    border-left: 5px solid var(--tab-color);
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--tab-color) 50%, transparent),
+                0 0 8px color-mix(in srgb, var(--tab-color) 40%, transparent);
+}
+
+.tab[data-color]:hover:not(.active) {
+    background: #4a4a4a;
+    border-color: color-mix(in srgb, var(--tab-color) 90%, white);
+    border-left: 5px solid color-mix(in srgb, var(--tab-color) 90%, white);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--tab-color) 35%, transparent);
 }
 
 /* Main content area */
@@ -1370,6 +1398,98 @@ main {
     margin: 4px 0;
 }
 
+/* Tab Color Picker Modal */
+.tab-color-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+}
+
+.tab-color-content {
+    background: #2a2a2a;
+    border: 1px solid #666;
+    border-radius: 12px;
+    padding: 20px;
+    min-width: 280px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.tab-color-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.tab-color-header h3 {
+    margin: 0;
+    color: var(--text-color);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.tab-color-close {
+    background: none;
+    border: none;
+    color: #999;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+}
+
+.tab-color-close:hover {
+    background: #3a3a3a;
+    color: white;
+}
+
+.tab-color-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+}
+
+.tab-color-option {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.tab-color-option:hover {
+    transform: scale(1.1);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.tab-color-option.default {
+    background: linear-gradient(45deg, #666 25%, transparent 25%), 
+                linear-gradient(-45deg, #666 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #666 75%), 
+                linear-gradient(-45deg, transparent 75%, #666 75%);
+    background-size: 4px 4px;
+    background-position: 0 0, 0 2px, 2px -2px, -2px 0px;
+}
+
+.tab-color-option.selected {
+    border-color: white;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
 /* Settings Modal */
 .settings-modal {
     max-width: 600px;
@@ -1863,6 +1983,7 @@ body[data-theme="light"] {
 [data-theme="light"] .tab:hover:not(.active) {
     background: #f7fafc;
     border-color: var(--accent-color);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--accent-color) 20%, transparent);
 }
 
 [data-theme="light"] .tab.active {
@@ -1881,6 +2002,21 @@ body[data-theme="light"] {
     background: #f7fafc;
     border-color: var(--accent-color);
     color: var(--accent-color);
+}
+
+/* Light theme colored tabs */
+[data-theme="light"] .tab[data-color]:not(.active) {
+    background: #ffffff;
+    border: 1px solid var(--tab-color, #e2e8f0);
+    border-left: 5px solid var(--tab-color, #e2e8f0);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--tab-color) 15%, transparent);
+}
+
+[data-theme="light"] .tab[data-color]:hover:not(.active) {
+    background: #f8fafc;
+    border-color: color-mix(in srgb, var(--tab-color) 80%, black);
+    border-left: 5px solid color-mix(in srgb, var(--tab-color) 80%, black);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--tab-color) 25%, transparent);
 }
 
 [data-theme="light"] #quick-add-input {
@@ -2110,5 +2246,34 @@ body[data-theme="light"] {
 
 [data-theme="light"] .time-separator {
     color: #64748b;
+}
+
+/* Light theme tab color picker */
+[data-theme="light"] .tab-color-content {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .tab-color-header h3 {
+    color: #2d3748;
+}
+
+[data-theme="light"] .tab-color-close {
+    color: #64748b;
+}
+
+[data-theme="light"] .tab-color-close:hover {
+    background: #f1f5f9;
+    color: #2d3748;
+}
+
+[data-theme="light"] .tab-color-option:hover {
+    border-color: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] .tab-color-option.selected {
+    border-color: #2d3748;
+    box-shadow: 0 0 0 2px rgba(45, 55, 72, 0.2);
 }
 
