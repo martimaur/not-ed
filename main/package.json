@@ -22,17 +22,17 @@
   "build": {
     "appId": "com.martimaur.noted",
     "productName": "Noted",
+    "asar": false,
     "directories": {
       "output": "dist"
     },
     "files": [
       "**/*",
-      "!node_modules/**/*",
-      "node_modules/electron-updater/**/*",
-      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
-      "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
-      "!**/node_modules/*.d.ts",
-      "!**/node_modules/.bin",
+      "node_modules/**/*",
+      "!node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!node_modules/*.d.ts",
+      "!node_modules/.bin",
       "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
       "!.editorconfig",
       "!**/._*",
@@ -41,15 +41,28 @@
       "!**/{appveyor.yml,.travis.yml,circle.yml}",
       "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
     ],
+    "extraFiles": [
+      {
+        "from": "node_modules/electron/dist",
+        "to": "./",
+        "filter": [
+          "ffmpeg.dll"
+        ]
+      }
+    ],
     "win": {
       "target": [
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "assets/notedLogo.ico"
@@ -75,6 +88,7 @@
     "electron-reloader": "^1.2.3"
   },
   "dependencies": {
-    "electron-updater": "^6.6.2"
+    "electron-updater": "^6.6.2",
+    "graceful-fs": "^4.2.11"
   }
 }

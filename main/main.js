@@ -6,6 +6,11 @@ const fs = require('fs')
 // Check if running in development
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
 
+// Disable features that require ffmpeg
+app.commandLine.appendSwitch('disable-features', 'VizDisplayCompositor')
+app.commandLine.appendSwitch('disable-background-media-tasks')
+app.commandLine.appendSwitch('disable-renderer-backgrounding')
+
 try {
   require('electron-reloader')(module)
 } catch (_) {}
@@ -65,7 +70,11 @@ app.whenReady().then(() => {
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
-            webSecurity: false
+            webSecurity: false,
+            enableRemoteModule: false,
+            // Disable media features that require ffmpeg
+            webgl: false,
+            plugins: false
         },
         frame: false, // Frameless window for custom title bar
         transparent: false,
