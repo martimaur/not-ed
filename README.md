@@ -1,4 +1,4 @@
-# Noted - Task Management App
+# Not|ed - Task Management App
 
 <div align="center">
   <img src="main/assets/notedLogo.svg" alt="Noted Logo" width="120" height="120">
