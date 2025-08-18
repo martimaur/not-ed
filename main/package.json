@@ -15,6 +15,7 @@
   "scripts": {
     "start": "electron .",
     "build": "electron-builder",
+    "build-dir": "electron-builder --dir",
     "dist": "electron-builder --publish=never",
     "publish": "electron-builder --publish=always"
   },
@@ -44,11 +45,6 @@
     "linux": {
       "target": "AppImage",
       "icon": "assets/notedLogo.png"
-    },
-    "publish": {
-      "provider": "github",
-      "owner": "martimaur",
-      "repo": "not-ed"
     }
   },
   "devDependencies": {
