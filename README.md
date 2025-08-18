@@ -15,10 +15,7 @@
 <img src="docs/images/main-interface.png" alt="Main Interface" width="800">
 
 ### Settings Panel
-<img src="docs/images/settings-panel.png" alt="Settings Panel" width="800">
-
-### Tab Management
-<img src="docs/images/tab-management.png" alt="Tab Management" width="800">
+<img src="docs/images/settings-interface.png" alt="Settings Panel" width="800">
 
 </div>
 
