@@ -7,6 +7,19 @@
 
 ---
 
+## Features
+
+- **Task Management**: Create, edit, and organize tasks with ease
+- **Repeat Tasks**: Set tasks to repeat daily, weekly, monthly, or yearly
+- **Tab System**: Organize tasks into custom tabs with color coding
+- **Dark/Light Themes**: Switch between dark and light modes
+- **Responsive Design**: Animated panels and smooth transitions
+- **Auto-Updates**: Automatic updates via GitHub Releases
+- **Cross-Platform**: Available for Windows, macOS, and Linux
+
+## Installation
+
+
 ## 📸 Screenshots
 
 <div align="center">
@@ -20,18 +33,6 @@
 </div>
 
 ---
-
-## Features
-
-- **Task Management**: Create, edit, and organize tasks with ease
-- **Repeat Tasks**: Set tasks to repeat daily, weekly, monthly, or yearly
-- **Tab System**: Organize tasks into custom tabs with color coding
-- **Dark/Light Themes**: Switch between dark and light modes
-- **Responsive Design**: Animated panels and smooth transitions
-- **Auto-Updates**: Automatic updates via GitHub Releases
-- **Cross-Platform**: Available for Windows, macOS, and Linux
-
-## Installation
 
 ### Download
 
