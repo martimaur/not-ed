@@ -1,6 +1,28 @@
 # Noted - Task Management App
 
-A modern, efficient task management application built with Electron.
+<div align="center">
+  <img src="main/assets/notedLogo.svg" alt="Noted Logo" width="120" height="120">
+  <p><em>A modern, efficient task management application built with Electron</em></p>
+</div>
+
+---
+
+## 📸 Screenshots
+
+<div align="center">
+  
+### Main Interface
+<img src="docs/images/main-interface.png" alt="Main Interface" width="800">
+
+### Settings Panel
+<img src="docs/images/settings-panel.png" alt="Settings Panel" width="800">
+
+### Tab Management
+<img src="docs/images/tab-management.png" alt="Tab Management" width="800">
+
+</div>
+
+---
 
 ## Features
 
