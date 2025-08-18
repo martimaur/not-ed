@@ -3,15 +3,6 @@
     "name": "Home",
     "tasks": [
       {
-        "id": 1,
-        "text": "Daily task",
-        "completed": true,
-        "order": 0,
-        "dueDate": "2025-08-17T12:05:00.000Z",
-        "repeat": "daily",
-        "creationDate": "2025-08-17T12:02:43.916Z"
-      },
-      {
         "id": 2,
         "text": "daily task 2",
         "completed": false,
@@ -38,15 +29,7 @@
   },
   "tab_1755430850394": {
     "name": "e",
-    "tasks": [
-      {
-        "id": 1,
-        "text": "eaea",
-        "completed": true,
-        "order": 0,
-        "creationDate": "2025-08-17T11:52:18.145Z"
-      }
-    ],
+    "tasks": [],
     "color": "#ef4444"
   },
   "tab_1755443636336": {
