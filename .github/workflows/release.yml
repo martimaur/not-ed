@@ -42,21 +42,21 @@ jobs:
         working-directory: ./main
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
-        run: npx electron-builder --win portable
+        run: npx electron-builder --win --publish never
         
       - name: Build app (macOS)
         if: matrix.os == 'macos-latest'
         working-directory: ./main
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
-        run: npx electron-builder --mac dmg
+        run: npx electron-builder --mac dmg --publish never
         
       - name: Build app (Linux)
         if: matrix.os == 'ubuntu-latest'
         working-directory: ./main
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
-        run: npx electron-builder --linux AppImage
+        run: npx electron-builder --linux AppImage --publish never
         
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
