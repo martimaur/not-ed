@@ -1,12 +1,62 @@
 {
   "name": "noted",
+  "version": "1.0.0",
+  "description": "A modern task management app with tabs",
   "main": "main.js",
-  "scripts": {
-    "start": "electron ."
+  "homepage": "https://github.com/martimaur/not-ed",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/martimaur/not-ed.git"
   },
-  "description": "",
+  "author": {
+    "name": "Martim Auriault",
+    "email": "your-email@example.com"
+  },
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "dist": "electron-builder --publish=never",
+    "publish": "electron-builder --publish=always"
+  },
+  "build": {
+    "appId": "com.martimaur.noted",
+    "productName": "Noted",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!node_modules/**/*",
+      "node_modules/electron-updater/**/*"
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "assets/notedLogo.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/notedLogo.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/notedLogo.png"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "martimaur",
+      "repo": "not-ed"
+    }
+  },
   "devDependencies": {
     "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
     "electron-reloader": "^1.2.3"
+  },
+  "dependencies": {
+    "electron-updater": "^6.6.2"
   }
 }

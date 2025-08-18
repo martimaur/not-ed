@@ -2377,3 +2377,120 @@ body[data-theme="light"] {
     box-shadow: 0 0 0 2px rgba(45, 55, 72, 0.2);
 }
 
+/* Auto-updater notification styles */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.update-notification {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #e5e5e5;
+}
+
+.update-notification h4 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #7662cf;
+}
+
+.update-notification p {
+    margin: 0 0 12px 0;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #b5b5b5;
+}
+
+.update-btn, .update-btn-secondary {
+    background: #7662cf;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    margin-right: 8px;
+    transition: background 0.2s ease;
+}
+
+.update-btn:hover {
+    background: #5a4ba3;
+}
+
+.update-btn-secondary {
+    background: #4a4a4a;
+}
+
+.update-btn-secondary:hover {
+    background: #5a5a5a;
+}
+
+/* Update notification styles */
+.update-notification {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+.update-content h4 {
+    margin: 0 0 8px 0;
+    color: #e5e5e5;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.update-content p {
+    margin: 0 0 12px 0;
+    color: #b3b3b3;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.update-btn {
+    background: #7662cf;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    margin-right: 8px;
+    transition: background 0.2s ease;
+}
+
+.update-btn:hover {
+    background: #5f4bb8;
+}
+
+.update-btn-secondary {
+    background: transparent;
+    color: #b3b3b3;
+    border: 1px solid #444;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.update-btn-secondary:hover {
+    background: #444;
+    color: #e5e5e5;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+

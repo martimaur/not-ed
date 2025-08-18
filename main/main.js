@@ -1,10 +1,56 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
+const { autoUpdater } = require('electron-updater')
 const path = require('path')
 const fs = require('fs')
+
+// Check if running in development
+const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
 
 try {
   require('electron-reloader')(module)
 } catch (_) {}
+
+// Configure auto-updater (only in production)
+if (!isDev) {
+    autoUpdater.checkForUpdatesAndNotify()
+}
+
+// Auto-updater events
+autoUpdater.on('checking-for-update', () => {
+    console.log('Checking for update...')
+})
+
+autoUpdater.on('update-available', (info) => {
+    console.log('Update available.')
+    if (myWindow) {
+        myWindow.webContents.send('update-available', info)
+    }
+})
+
+autoUpdater.on('update-not-available', (info) => {
+    console.log('Update not available.')
+})
+
+autoUpdater.on('error', (err) => {
+    console.log('Error in auto-updater. ' + err)
+})
+
+autoUpdater.on('download-progress', (progressObj) => {
+    let log_message = "Download speed: " + progressObj.bytesPerSecond
+    log_message = log_message + ' - Downloaded ' + progressObj.percent + '%'
+    log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')'
+    console.log(log_message)
+    if (myWindow) {
+        myWindow.webContents.send('download-progress', progressObj)
+    }
+})
+
+autoUpdater.on('update-downloaded', (info) => {
+    console.log('Update downloaded')
+    if (myWindow) {
+        myWindow.webContents.send('update-downloaded', info)
+    }
+})
 
 // Paths to store data
 const tasksFilePath = path.join(__dirname, 'tasks.json')
@@ -122,6 +168,11 @@ app.whenReady().then(() => {
         }
     });
 
+    // Auto-updater IPC handler
+    ipcMain.handle('restart-app', () => {
+        autoUpdater.quitAndInstall()
+    })
+
     // IPC handler for zoom level changes
     ipcMain.on('set-zoom-level', (event, zoomLevel) => {
         if (myWindow && myWindow.webContents) {
@@ -157,6 +208,14 @@ app.whenReady().then(() => {
     
     // Remove the menu bar
     myWindow.setMenuBarVisibility(false);
+
+    // Initialize auto-updater (only in production)
+    if (!isDev) {
+        // Check for updates 5 seconds after the app starts
+        setTimeout(() => {
+            autoUpdater.checkForUpdatesAndNotify()
+        }, 5000)
+    }
 
     myWindow.loadFile('index.html');
     

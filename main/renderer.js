@@ -42,6 +42,81 @@ ipcRenderer.on('pin-state-changed', (event, isPinned) => {
     }
 });
 
+// Auto-updater event listeners
+ipcRenderer.on('update-available', (event, info) => {
+    showUpdateNotification('Update Available', `Version ${info.version} is available. It will be downloaded in the background.`);
+});
+
+ipcRenderer.on('download-progress', (event, progressObj) => {
+    const percent = Math.round(progressObj.percent);
+    showUpdateNotification('Downloading Update', `Download progress: ${percent}%`);
+});
+
+ipcRenderer.on('update-downloaded', (event, info) => {
+    showUpdateNotification('Update Ready', 'Update downloaded. Click to restart and install.', true);
+});
+
+// Function to show update notifications
+function showUpdateNotification(title, message, showRestartButton = false) {
+    // Remove existing update notification if any
+    const existingNotification = document.querySelector('.update-notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = 'update-notification';
+    notification.innerHTML = `
+        <div class="update-content">
+            <h4>${title}</h4>
+            <p>${message}</p>
+            ${showRestartButton ? '<button id="restart-button" class="update-btn">Restart Now</button>' : ''}
+            <button id="dismiss-update" class="update-btn-secondary">Dismiss</button>
+        </div>
+    `;
+
+    // Add styles
+    notification.style.cssText = `
+        position: fixed;
+        top: 50px;
+        right: 20px;
+        background: #2d2d2d;
+        border: 1px solid #444;
+        border-radius: 8px;
+        padding: 15px;
+        max-width: 300px;
+        z-index: 10000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        animation: slideInRight 0.3s ease-out;
+    `;
+
+    // Add to body
+    document.body.appendChild(notification);
+
+    // Add event listeners
+    const dismissBtn = notification.querySelector('#dismiss-update');
+    dismissBtn.addEventListener('click', () => {
+        notification.remove();
+    });
+
+    if (showRestartButton) {
+        const restartBtn = notification.querySelector('#restart-button');
+        restartBtn.addEventListener('click', async () => {
+            await ipcRenderer.invoke('restart-app');
+        });
+    }
+
+    // Auto-dismiss after 10 seconds if not the restart notification
+    if (!showRestartButton) {
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 10000);
+    }
+}
+
 // Title bar drag functionality with double-click to maximize
 let titleBarClickCount = 0;
 let titleBarClickTimer = null;
