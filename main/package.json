@@ -1,6 +1,6 @@
 {
   "name": "noted",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A modern task management app with tabs",
   "main": "main.js",
   "homepage": "https://github.com/martimaur/not-ed",
