@@ -32,13 +32,14 @@ jobs:
           
       - name: Install dependencies
         working-directory: ./main
-        run: npm ci
+        run: npm install
         
       - name: Build app
         working-directory: ./main
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run publish
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+        run: npm run build
         
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
