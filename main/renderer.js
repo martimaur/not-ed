@@ -44,16 +44,27 @@ ipcRenderer.on('pin-state-changed', (event, isPinned) => {
 
 // Auto-updater event listeners
 ipcRenderer.on('update-available', (event, info) => {
+    console.log('Update available:', info)
     showUpdateNotification('Update Available', `Version ${info.version} is available. It will be downloaded in the background.`);
 });
 
 ipcRenderer.on('download-progress', (event, progressObj) => {
+    console.log('Download progress:', progressObj)
     const percent = Math.round(progressObj.percent);
     showUpdateNotification('Downloading Update', `Download progress: ${percent}%`);
 });
 
 ipcRenderer.on('update-downloaded', (event, info) => {
+    console.log('Update downloaded:', info)
     showUpdateNotification('Update Ready', 'Update downloaded. Click to restart and install.', true);
+});
+
+// Manual update check for testing (Ctrl+U)
+document.addEventListener('keydown', async (e) => {
+    if (e.ctrlKey && e.key === 'u') {
+        console.log('Manual update check triggered by Ctrl+U')
+        await ipcRenderer.invoke('check-for-updates')
+    }
 });
 
 // Function to show update notifications

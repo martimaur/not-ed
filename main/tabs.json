@@ -1,39 +1,6 @@
 {
-  "home_1755086825145": {
+  "home_1755612087410": {
     "name": "Home",
-    "tasks": [
-      {
-        "id": 2,
-        "text": "daily task 2",
-        "completed": false,
-        "order": 1,
-        "repeat": "daily",
-        "creationDate": "2025-08-17T15:10:27.879Z"
-      },
-      {
-        "id": 3,
-        "text": "daily task 3",
-        "completed": false,
-        "order": 2,
-        "dueDate": "2025-08-17T15:10:00.000Z",
-        "repeat": "daily",
-        "creationDate": "2025-08-17T15:10:43.834Z"
-      }
-    ],
-    "color": "#3b82f6"
-  },
-  "tab_1755087144791": {
-    "name": "New Tab",
-    "tasks": [],
-    "color": "#ef4444"
-  },
-  "tab_1755430850394": {
-    "name": "e",
-    "tasks": [],
-    "color": "#ef4444"
-  },
-  "tab_1755443636336": {
-    "name": "e",
     "tasks": []
   }
 }

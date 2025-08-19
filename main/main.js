@@ -17,16 +17,27 @@ try {
 
 // Configure auto-updater (only in production)
 if (!isDev) {
-    autoUpdater.checkForUpdatesAndNotify()
+    console.log('Production mode - Auto-updater enabled')
+} else {
+    console.log('Development mode - Auto-updater disabled')
 }
 
 // Auto-updater events
 autoUpdater.on('checking-for-update', () => {
     console.log('Checking for update...')
+    if (splashWindow) {
+        splashWindow.webContents.send('splash-status', 'Checking for updates...')
+        splashWindow.webContents.send('splash-progress', -1) // Indeterminate
+    }
 })
 
 autoUpdater.on('update-available', (info) => {
     console.log('Update available.')
+    updateAvailable = true
+    if (splashWindow) {
+        splashWindow.webContents.send('splash-status', `Downloading update v${info.version}...`)
+        splashWindow.webContents.send('splash-progress', 0)
+    }
     if (myWindow) {
         myWindow.webContents.send('update-available', info)
     }
@@ -34,10 +45,30 @@ autoUpdater.on('update-available', (info) => {
 
 autoUpdater.on('update-not-available', (info) => {
     console.log('Update not available.')
+    if (splashWindow) {
+        splashWindow.webContents.send('splash-status', 'No updates available')
+        setTimeout(() => {
+            splashWindow.webContents.send('splash-status', 'Starting application...')
+            setTimeout(() => {
+                createMainWindow()
+                splashWindow.webContents.send('splash-close')
+            }, 1000)
+        }, 1000)
+    }
 })
 
 autoUpdater.on('error', (err) => {
     console.log('Error in auto-updater. ' + err)
+    if (splashWindow) {
+        splashWindow.webContents.send('splash-error', 'Update check failed')
+        setTimeout(() => {
+            splashWindow.webContents.send('splash-status', 'Starting application...')
+            setTimeout(() => {
+                createMainWindow()
+                splashWindow.webContents.send('splash-close')
+            }, 1000)
+        }, 2000)
+    }
 })
 
 autoUpdater.on('download-progress', (progressObj) => {
@@ -45,6 +76,11 @@ autoUpdater.on('download-progress', (progressObj) => {
     log_message = log_message + ' - Downloaded ' + progressObj.percent + '%'
     log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')'
     console.log(log_message)
+    
+    if (splashWindow) {
+        splashWindow.webContents.send('splash-progress', Math.round(progressObj.percent))
+        splashWindow.webContents.send('splash-status', `Downloading update... ${Math.round(progressObj.percent)}%`)
+    }
     if (myWindow) {
         myWindow.webContents.send('download-progress', progressObj)
     }
@@ -52,6 +88,13 @@ autoUpdater.on('download-progress', (progressObj) => {
 
 autoUpdater.on('update-downloaded', (info) => {
     console.log('Update downloaded')
+    updateDownloaded = true
+    if (splashWindow) {
+        splashWindow.webContents.send('splash-status', 'Update ready - Restarting...')
+        setTimeout(() => {
+            autoUpdater.quitAndInstall()
+        }, 2000)
+    }
     if (myWindow) {
         myWindow.webContents.send('update-downloaded', info)
     }
@@ -62,8 +105,47 @@ const tasksFilePath = path.join(__dirname, 'tasks.json')
 const tabsFilePath = path.join(__dirname, 'tabs.json')
 
 let myWindow;
+let splashWindow;
+let updateAvailable = false;
+let updateDownloaded = false;
 
 app.whenReady().then(() => {
+    createSplashWindow();
+});
+
+function createSplashWindow() {
+    splashWindow = new BrowserWindow({
+        width: 400,
+        height: 300,
+        frame: false,
+        alwaysOnTop: true,
+        transparent: false,
+        resizable: false,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false
+        },
+        show: false
+    });
+
+    splashWindow.loadFile('splash.html');
+    
+    splashWindow.once('ready-to-show', () => {
+        splashWindow.show();
+        if (!isDev) {
+            startUpdateProcess();
+        } else {
+            // In development, skip update check and go straight to main app
+            splashWindow.webContents.send('splash-status', 'Development mode - Starting application...');
+            setTimeout(() => {
+                createMainWindow();
+                splashWindow.webContents.send('splash-close');
+            }, 2000);
+        }
+    });
+}
+
+function createMainWindow() {
     myWindow = new BrowserWindow({
         width: 1000,
         height: 700,
@@ -182,6 +264,25 @@ app.whenReady().then(() => {
         autoUpdater.quitAndInstall()
     })
 
+    // Manual update check for testing
+    ipcMain.handle('check-for-updates', () => {
+        console.log('Manual update check triggered')
+        autoUpdater.checkForUpdatesAndNotify()
+    })
+
+    // Splash screen IPC handlers
+    ipcMain.on('splash-ready', () => {
+        console.log('Splash screen ready')
+    })
+
+    ipcMain.on('splash-finished', () => {
+        if (splashWindow) {
+            splashWindow.close()
+            splashWindow = null
+        }
+        myWindow.show()
+    })
+
     // IPC handler for zoom level changes
     ipcMain.on('set-zoom-level', (event, zoomLevel) => {
         if (myWindow && myWindow.webContents) {
@@ -192,7 +293,7 @@ app.whenReady().then(() => {
     });
 
     // Handle window close event to save data
-    myWindow.on('close', async (event) => {
+    myWindow.on('close', async (event) => {                        
         // Prevent immediate close
         event.preventDefault();
         
@@ -218,14 +319,6 @@ app.whenReady().then(() => {
     // Remove the menu bar
     myWindow.setMenuBarVisibility(false);
 
-    // Initialize auto-updater (only in production)
-    if (!isDev) {
-        // Check for updates 5 seconds after the app starts
-        setTimeout(() => {
-            autoUpdater.checkForUpdatesAndNotify()
-        }, 5000)
-    }
-
     myWindow.loadFile('index.html');
     
     // Fallback: show window after 1 second if renderer-ready hasn't fired
@@ -234,8 +327,34 @@ app.whenReady().then(() => {
             myWindow.show();
         }
     }, 1000);
-})
+}
+
+function startUpdateProcess() {
+    if (splashWindow) {
+        splashWindow.webContents.send('splash-status', 'Checking for updates...')
+    }
+    
+    // Start checking for updates
+    setTimeout(() => {
+        autoUpdater.checkForUpdatesAndNotify()
+    }, 1000)
+
+    // If no update found after 10 seconds, proceed to main app
+    setTimeout(() => {
+        if (!updateAvailable && !updateDownloaded) {
+            if (splashWindow) {
+                splashWindow.webContents.send('splash-status', 'Starting application...')
+            }
+            setTimeout(() => {
+                createMainWindow()
+                if (splashWindow) {
+                    splashWindow.webContents.send('splash-close')
+                }
+            }, 1000)
+        }
+    }, 10000)
+}
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
-})
+});

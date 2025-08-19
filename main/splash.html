@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¬ed - Loading</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #e5e5e5;
+            overflow: hidden;
+        }
+
+        .logo-container {
+            margin-bottom: 40px;
+            animation: pulse 2s infinite ease-in-out;
+        }
+
+        .logo {
+            width: 80px;
+            height: 60px;
+            color: #7662cf;
+        }
+
+        .app-name {
+            font-size: 28px;
+            font-weight: 700;
+            margin-top: 15px;
+            color: #e5e5e5;
+            text-align: center;
+        }
+
+        .status-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .status-text {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 20px;
+            min-height: 20px;
+        }
+
+        .progress-container {
+            width: 200px;
+            height: 4px;
+            background: #404040;
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #7662cf, #9f7aea);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-bar.indeterminate {
+            width: 30%;
+            animation: indeterminate 1.5s infinite ease-in-out;
+        }
+
+        .version {
+            position: absolute;
+            bottom: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .error {
+            color: #ff6b6b;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes indeterminate {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(333%); }
+        }
+
+        .fade-out {
+            animation: fadeOut 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="logo-container">
+        <svg class="logo" viewBox="0 0 280 200" xmlns="http://www.w3.org/2000/svg">
+            <!-- Horizontal bar -->
+            <rect x="12.3" y="20" width="255.4" height="80.2" rx="29.25" fill="currentColor"/>
+            <!-- Vertical bar -->
+            <rect x="210.3" y="23" width="77.4" height="173" rx="29.25" fill="currentColor"/>
+            <!-- Bottom bar -->
+            <rect x="12.3" y="115.8" width="186.6" height="80" rx="29.25" fill="currentColor"/>
+        </svg>
+        <div class="app-name">not|ed</div>
+    </div>
+
+    <div class="status-container">
+        <div class="status-text" id="status">Initializing...</div>
+        <div class="progress-container">
+            <div class="progress-bar indeterminate" id="progress"></div>
+        </div>
+        <div class="error" id="error" style="display: none;"></div>
+    </div>
+
+    <div class="version" id="version">v1.0.8</div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        const statusEl = document.getElementById('status');
+        const progressEl = document.getElementById('progress');
+        const errorEl = document.getElementById('error');
+
+        // Update status messages
+        ipcRenderer.on('splash-status', (event, message) => {
+            statusEl.textContent = message;
+        });
+
+        // Update progress
+        ipcRenderer.on('splash-progress', (event, percent) => {
+            if (percent >= 0) {
+                progressEl.classList.remove('indeterminate');
+                progressEl.style.width = percent + '%';
+            } else {
+                progressEl.classList.add('indeterminate');
+                progressEl.style.width = '30%';
+            }
+        });
+
+        // Show error
+        ipcRenderer.on('splash-error', (event, message) => {
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            statusEl.textContent = 'Error occurred';
+        });
+
+        // Close splash and show main app
+        ipcRenderer.on('splash-close', () => {
+            document.body.classList.add('fade-out');
+            setTimeout(() => {
+                ipcRenderer.send('splash-finished');
+            }, 500);
+        });
+
+        // Ready
+        ipcRenderer.send('splash-ready');
+    </script>
+</body>
+</html>
