@@ -18,6 +18,16 @@ try {
 // Configure auto-updater (only in production)
 if (!isDev) {
     console.log('Production mode - Auto-updater enabled')
+    
+    // Configure auto-updater settings
+    autoUpdater.autoDownload = false // Don't auto-download updates
+    autoUpdater.checkForUpdatesAndNotify = () => {
+        return autoUpdater.checkForUpdates().catch(err => {
+            console.log('Update check failed (this is normal):', err.message)
+            // Emit update-not-available to continue with app startup
+            autoUpdater.emit('update-not-available')
+        })
+    }
 } else {
     console.log('Development mode - Auto-updater disabled')
 }
@@ -59,15 +69,13 @@ autoUpdater.on('update-not-available', (info) => {
 
 autoUpdater.on('error', (err) => {
     console.log('Error in auto-updater. ' + err)
+    // Don't show error to user - just continue to app
     if (splashWindow) {
-        splashWindow.webContents.send('splash-error', 'Update check failed')
+        splashWindow.webContents.send('splash-status', 'Starting application...')
         setTimeout(() => {
-            splashWindow.webContents.send('splash-status', 'Starting application...')
-            setTimeout(() => {
-                createMainWindow()
-                splashWindow.webContents.send('splash-close')
-            }, 1000)
-        }, 2000)
+            createMainWindow()
+            splashWindow.webContents.send('splash-close')
+        }, 1000)
     }
 })
 
@@ -110,94 +118,24 @@ let updateAvailable = false;
 let updateDownloaded = false;
 
 app.whenReady().then(() => {
+    setupIpcHandlers(); // Set up IPC handlers once
     createSplashWindow();
 });
 
-function createSplashWindow() {
-    splashWindow = new BrowserWindow({
-        width: 400,
-        height: 300,
-        frame: false,
-        alwaysOnTop: true,
-        transparent: false,
-        resizable: false,
-        webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false
-        },
-        show: false
-    });
-
-    splashWindow.loadFile('splash.html');
-    
-    splashWindow.once('ready-to-show', () => {
-        splashWindow.show();
-        if (!isDev) {
-            startUpdateProcess();
-        } else {
-            // In development, skip update check and go straight to main app
-            splashWindow.webContents.send('splash-status', 'Development mode - Starting application...');
-            setTimeout(() => {
-                createMainWindow();
-                splashWindow.webContents.send('splash-close');
-            }, 2000);
-        }
-    });
-}
-
-function createMainWindow() {
-    myWindow = new BrowserWindow({
-        width: 1000,
-        height: 700,
-        webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false,
-            webSecurity: false,
-            enableRemoteModule: false,
-            // Disable media features that require ffmpeg
-            webgl: false,
-            plugins: false
-        },
-        frame: false, // Frameless window for custom title bar
-        transparent: false,
-        resizable: true,
-        minWidth: 400,
-        minHeight: 300,
-        show: false, // Don't show window until ready
-        backgroundColor: '#1e1e1e', // Match your dark theme
-        titleBarStyle: 'hidden',
-        icon: path.join(__dirname, 'assets', 'notedLogo.svg') // Add your logo icon
-    });
-
-    // Set up IPC handlers for window controls
-    ipcMain.on('window-controls', (event, action, data) => {
-        switch(action) {
-            case 'minimize':
-                myWindow.minimize();
-                break;
-            case 'maximize':
-                if (myWindow.isMaximized()) {
-                    myWindow.unmaximize();
-                } else {
-                    myWindow.maximize();
-                }
-                break;
-            case 'close':
-                myWindow.close();
-                break;
-            case 'set-zoom':
-                if (data && typeof data === 'number') {
-                    myWindow.webContents.setZoomFactor(data);
-                }
-                break;
-            case 'toggle-pin':
-                const isCurrentlyOnTop = myWindow.isAlwaysOnTop();
-                myWindow.setAlwaysOnTop(!isCurrentlyOnTop);
-                // Send the new state back to renderer
-                myWindow.webContents.send('pin-state-changed', !isCurrentlyOnTop);
-                break;
-        }
-    });
+// Set up all IPC handlers once when app starts
+function setupIpcHandlers() {
+    // Remove any existing handlers to prevent duplicates
+    ipcMain.removeAllListeners('save-tasks');
+    ipcMain.removeAllListeners('load-tasks');
+    ipcMain.removeAllListeners('save-tabs');
+    ipcMain.removeAllListeners('load-tabs');
+    ipcMain.removeAllListeners('restart-app');
+    ipcMain.removeAllListeners('check-for-updates');
+    ipcMain.removeAllListeners('splash-ready');
+    ipcMain.removeAllListeners('splash-finished');
+    ipcMain.removeAllListeners('renderer-ready');
+    ipcMain.removeAllListeners('set-zoom-level');
+    ipcMain.removeAllListeners('window-controls');
 
     // IPC handler for saving tasks
     ipcMain.handle('save-tasks', async (event, tasks) => {
@@ -276,20 +214,120 @@ function createMainWindow() {
     })
 
     ipcMain.on('splash-finished', () => {
-        if (splashWindow) {
+        if (splashWindow && !splashWindow.isDestroyed()) {
             splashWindow.close()
             splashWindow = null
         }
-        myWindow.show()
+        if (myWindow && !myWindow.isDestroyed()) {
+            myWindow.show()
+        }
+    })
+
+    // Show window when renderer is fully ready
+    ipcMain.on('renderer-ready', () => {
+        if (myWindow && !myWindow.isDestroyed()) {
+            myWindow.show()
+        }
     })
 
     // IPC handler for zoom level changes
     ipcMain.on('set-zoom-level', (event, zoomLevel) => {
-        if (myWindow && myWindow.webContents) {
+        if (myWindow && !myWindow.isDestroyed() && myWindow.webContents) {
             // Set zoom factor (zoomLevel is percentage, so divide by 100)
             const zoomFactor = zoomLevel / 100;
             myWindow.webContents.setZoomFactor(zoomFactor);
         }
+    })
+
+    // Set up window controls handler
+    ipcMain.on('window-controls', (event, action, data) => {
+        if (!myWindow || myWindow.isDestroyed()) return;
+        
+        switch(action) {
+            case 'minimize':
+                myWindow.minimize();
+                break;
+            case 'maximize':
+                if (myWindow.isMaximized()) {
+                    myWindow.unmaximize();
+                } else {
+                    myWindow.maximize();
+                }
+                break;
+            case 'close':
+                myWindow.close();
+                break;
+            case 'set-zoom':
+                if (data && typeof data === 'number') {
+                    myWindow.webContents.setZoomFactor(data);
+                }
+                break;
+            case 'toggle-pin':
+                const isCurrentlyOnTop = myWindow.isAlwaysOnTop();
+                myWindow.setAlwaysOnTop(!isCurrentlyOnTop);
+                // Send the new state back to renderer
+                if (!myWindow.isDestroyed()) {
+                    myWindow.webContents.send('pin-state-changed', !isCurrentlyOnTop);
+                }
+                break;
+        }
+    });
+}
+
+function createSplashWindow() {
+    splashWindow = new BrowserWindow({
+        width: 400,
+        height: 300,
+        frame: false,
+        alwaysOnTop: true,
+        transparent: false,
+        resizable: false,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false
+        },
+        show: false
+    });
+
+    splashWindow.loadFile('splash.html');
+    
+    splashWindow.once('ready-to-show', () => {
+        splashWindow.show();
+        if (!isDev) {
+            startUpdateProcess();
+        } else {
+            // In development, skip update check and go straight to main app
+            splashWindow.webContents.send('splash-status', 'Development mode - Starting application...');
+            setTimeout(() => {
+                createMainWindow();
+                splashWindow.webContents.send('splash-close');
+            }, 2000);
+        }
+    });
+}
+
+function createMainWindow() {
+    myWindow = new BrowserWindow({
+        width: 1000,
+        height: 700,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false,
+            webSecurity: false,
+            enableRemoteModule: false,
+            // Disable media features that require ffmpeg
+            webgl: false,
+            plugins: false
+        },
+        frame: false, // Frameless window for custom title bar
+        transparent: false,
+        resizable: true,
+        minWidth: 400,
+        minHeight: 300,
+        show: false, // Don't show window until ready
+        backgroundColor: '#1e1e1e', // Match your dark theme
+        titleBarStyle: 'hidden',
+        icon: path.join(__dirname, 'assets', 'notedLogo.svg') // Add your logo icon
     });
 
     // Handle window close event to save data
@@ -299,21 +337,22 @@ function createMainWindow() {
         
         // Request data from renderer and save them
         try {
-            myWindow.webContents.send('request-data-for-save');
+            if (!myWindow.isDestroyed()) {
+                myWindow.webContents.send('request-data-for-save');
+            }
             
             // Wait a bit for the renderer to respond
             setTimeout(() => {
-                myWindow.destroy();
+                if (myWindow && !myWindow.isDestroyed()) {
+                    myWindow.destroy();
+                }
             }, 100);
         } catch (error) {
             console.error('Error during close:', error);
-            myWindow.destroy();
+            if (myWindow && !myWindow.isDestroyed()) {
+                myWindow.destroy();
+            }
         }
-    });
-    
-    // Show window when renderer is fully ready
-    ipcMain.on('renderer-ready', () => {
-        myWindow.show();
     });
     
     // Remove the menu bar
@@ -323,7 +362,7 @@ function createMainWindow() {
     
     // Fallback: show window after 1 second if renderer-ready hasn't fired
     setTimeout(() => {
-        if (!myWindow.isVisible()) {
+        if (myWindow && !myWindow.isVisible()) {
             myWindow.show();
         }
     }, 1000);
