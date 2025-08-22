@@ -20,6 +20,12 @@ try {
 } catch (_) {}
 
 // Configure auto-updater (only in production)
+console.log('Environment check:')
+console.log('- NODE_ENV:', process.env.NODE_ENV)
+console.log('- app.isPackaged:', app.isPackaged)
+console.log('- isDev:', isDev)
+console.log('- Current version:', APP_VERSION)
+
 if (!isDev) {
     console.log('Production mode - Auto-updater enabled')
     
@@ -32,6 +38,8 @@ if (!isDev) {
     
     autoUpdater.autoDownload = true // Enable auto-download
     autoUpdater.autoInstallOnAppQuit = true
+    
+    console.log('Auto-updater configured for: martimaur/not-ed')
 } else {
     console.log('Development mode - Auto-updater disabled')
 }
@@ -61,8 +69,9 @@ autoUpdater.on('update-available', (info) => {
 
 autoUpdater.on('update-not-available', (info) => {
     console.log('Update not available.')
-    console.log('Latest available version:', info?.version || 'unknown')
-    console.log('Current version:', APP_VERSION)
+    console.log('- Latest available version:', info?.version || 'unknown')
+    console.log('- Current version:', APP_VERSION)
+    console.log('- Info object:', JSON.stringify(info, null, 2))
     if (splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.webContents.send('splash-status', 'No updates available')
         setTimeout(() => {
@@ -84,7 +93,10 @@ autoUpdater.on('update-not-available', (info) => {
 })
 
 autoUpdater.on('error', (err) => {
-    console.log('Error in auto-updater. ' + err)
+    console.log('Error in auto-updater:')
+    console.log('- Error message:', err.message || err)
+    console.log('- Error stack:', err.stack)
+    console.log('- Error details:', JSON.stringify(err, null, 2))
     // Don't show error to user - just continue to app
     if (splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.webContents.send('splash-status', 'Starting application...')
@@ -406,18 +418,25 @@ function createMainWindow() {
 }
 
 function startUpdateProcess() {
+    console.log('Starting update process...')
+    console.log('- isDev:', isDev)
+    console.log('- Current version:', APP_VERSION)
+    console.log('- Auto-updater enabled:', !isDev)
+    
     if (splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.webContents.send('splash-status', 'Checking for updates...')
     }
     
     // Start checking for updates
     setTimeout(() => {
+        console.log('Calling autoUpdater.checkForUpdatesAndNotify()...')
         autoUpdater.checkForUpdatesAndNotify()
     }, 1000)
 
     // If no update found after 10 seconds, proceed to main app
     setTimeout(() => {
         if (!updateAvailable && !updateDownloaded && !mainWindowCreated) {
+            console.log('Timeout reached - no update found, starting main app')
             if (splashWindow && !splashWindow.isDestroyed()) {
                 splashWindow.webContents.send('splash-status', 'Starting application...')
             }
