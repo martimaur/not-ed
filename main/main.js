@@ -160,9 +160,41 @@ autoUpdater.on('update-downloaded', (info) => {
     }
 })
 
-// Paths to store data
-const tasksFilePath = path.join(__dirname, 'tasks.json')
-const tabsFilePath = path.join(__dirname, 'tabs.json')
+// Paths to store data - use userData directory to preserve data across updates
+const userDataPath = app.getPath('userData')
+const tasksFilePath = path.join(userDataPath, 'tasks.json')
+const tabsFilePath = path.join(userDataPath, 'tabs.json')
+
+// Ensure userData directory exists
+if (!fs.existsSync(userDataPath)) {
+    fs.mkdirSync(userDataPath, { recursive: true })
+}
+
+// Migrate existing tabs.json from app directory to userData directory
+const oldTabsPath = path.join(__dirname, 'tabs.json')
+if (fs.existsSync(oldTabsPath) && !fs.existsSync(tabsFilePath)) {
+    try {
+        const tabsData = fs.readFileSync(oldTabsPath, 'utf8')
+        fs.writeFileSync(tabsFilePath, tabsData)
+        console.log('Migrated tabs.json to userData directory')
+        // Don't delete the old file immediately in case of issues
+    } catch (error) {
+        console.error('Error migrating tabs.json:', error)
+    }
+}
+
+// Migrate existing tasks.json from app directory to userData directory
+const oldTasksPath = path.join(__dirname, 'tasks.json')
+if (fs.existsSync(oldTasksPath) && !fs.existsSync(tasksFilePath)) {
+    try {
+        const tasksData = fs.readFileSync(oldTasksPath, 'utf8')
+        fs.writeFileSync(tasksFilePath, tasksData)
+        console.log('Migrated tasks.json to userData directory')
+        // Don't delete the old file immediately in case of issues
+    } catch (error) {
+        console.error('Error migrating tasks.json:', error)
+    }
+}
 
 let myWindow;
 let splashWindow;

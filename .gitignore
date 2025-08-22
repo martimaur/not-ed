@@ -52,4 +52,8 @@ ehthumbs.db
 # Windows shortcuts #
 #####################
 *.lnk
+
+# User data files #
+###################
 main/tasks.json
+main/tabs.json
