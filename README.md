@@ -3,6 +3,11 @@
 <div align="center">
   <img src="main/assets/notedLogo.svg" alt="Noted Logo" width="120" height="120">
   <p><em>A modern, efficient task management application built with Electron</em></p>
+  
+  [![GitHub release (latest by date)](https://img.shields.io/github/v/release/martimaur/not-ed?style=flat-square)](https://github.com/martimaur/not-ed/releases/latest)
+  [![GitHub downloads](https://img.shields.io/github/downloads/martimaur/not-ed/total?style=flat-square)](https://github.com/martimaur/not-ed/releases)
+  [![License](https://img.shields.io/github/license/martimaur/not-ed?style=flat-square)](LICENSE)
+  
 </div>
 
 ---
@@ -19,30 +24,30 @@
 
 ## Installation
 
+<div align="center">
 
-## 📸 Screenshots
+## Installation
 
 <div align="center">
-  
-### Main Interface
-<img src="docs/images/main-interface.png" alt="Main Interface" width="800">
 
-### Settings Panel
-<img src="docs/images/settings-interface.png" alt="Settings Panel" width="800">
+### 📥 **Download Latest Version**
+
+[![Download for Windows](https://img.shields.io/badge/Windows-Download-blue?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/martimaur/not-ed/releases/latest)
+[![Download for macOS](https://img.shields.io/badge/macOS-Download-lightgrey?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/martimaur/not-ed/releases/latest)
+[![Download for Linux](https://img.shields.io/badge/Linux-Download-orange?style=for-the-badge&logo=linux&logoColor=white)](https://github.com/martimaur/not-ed/releases/latest)
+
+<p><em>💡 Click above to get the latest version • Auto-updates included</em></p>
 
 </div>
 
----
+### Quick Install Guide
 
-### Download
+1. **Click your platform badge above** to go to the latest release
+2. **Windows**: Download the `.exe` file and run the installer
+3. **macOS**: Download the `.dmg` file and drag to Applications
+4. **Linux**: Download the `.AppImage` file, make executable and run: `chmod +x not-ed-*.AppImage && ./not-ed-*.AppImage`
 
-Download the latest version from the [Releases page](https://github.com/martimaur/not-ed/releases).
-
-### Platform-specific Instructions
-
-- **Windows**: Download the `.exe` installer or portable version
-- **macOS**: Download the `.dmg` file
-- **Linux**: Download the `.AppImage` file
+> **Note**: The app includes automatic updates, so you'll always stay current with the latest features and fixes!
 
 ## Auto-Updates
 
@@ -84,10 +89,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
-### v1.0.0 (2025-08-18)
-- Initial release
-- Task management with repeat functionality
+### v1.1.0 (2025-08-22) - Latest Stable Release
+- ✅ **Fixed**: Light mode tab highlighting bug (colored tabs now show correct colors when active)
+- ✅ **Improved**: Auto-updater stability and reliability
+- ✅ **Added**: User data preservation across updates (tabs and tasks saved safely)
+- ✅ **Enhanced**: Differential package updates for faster downloads
+- ✅ **Optimized**: Professional Discord-style splash screen with progress tracking
+
+### v1.0.x Series
+- Initial release with task management and repeat functionality
 - Tab system with color customization
-- Auto-updater integration
-- Cross-platform builds
+- Auto-updater integration and cross-platform builds
 - Dark/light theme support
+- GitHub Actions CI/CD pipeline
