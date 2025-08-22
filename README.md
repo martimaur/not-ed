@@ -21,6 +21,7 @@
 - **Text to Date**: You can write "today" or "at 8pm" on a task and it will automatically set the date
 - **Repeat Tasks**: Set tasks to repeat daily, weekly, monthly, or yearly
 - **Tab System**: Organize tasks into custom tabs with color coding
+- **Pin window**: Pin your window so you can focus on other stuff but keep your progress visible
 
 ## Installation
 
@@ -89,16 +90,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
-### v1.1.0 (2025-08-22) - Latest Stable Release
+### v1.1.0 (2025-08-22) - First Stable Release
 - ✅ **Fixed**: Light mode tab highlighting bug (colored tabs now show correct colors when active)
 - ✅ **Improved**: Auto-updater stability and reliability
 - ✅ **Added**: User data preservation across updates (tabs and tasks saved safely)
 - ✅ **Enhanced**: Differential package updates for faster downloads
 - ✅ **Optimized**: Professional Discord-style splash screen with progress tracking
-
-### v1.0.x Series
-- Initial release with task management and repeat functionality
-- Tab system with color customization
-- Auto-updater integration and cross-platform builds
-- Dark/light theme support
-- GitHub Actions CI/CD pipeline
