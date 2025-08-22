@@ -90,7 +90,9 @@ autoUpdater.on('update-downloaded', (info) => {
     
     // Automatically install and restart with explicit options
     setTimeout(() => {
-        autoUpdater.quitAndInstall(true, true) // Restart immediately after install
+        // For better auto-restart, use app.relaunch() before quitAndInstall
+        app.relaunch()
+        autoUpdater.quitAndInstall(false, true) // Don't restart via quitAndInstall since we're using relaunch
     }, 1000)
 })
 
@@ -152,7 +154,9 @@ autoUpdater.on('update-downloaded', (info) => {
     if (splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.webContents.send('splash-status', 'Update ready - Restarting...')
         setTimeout(() => {
-            autoUpdater.quitAndInstall(true, true) // Restart immediately after install
+            // For better auto-restart, use app.relaunch() before quitAndInstall
+            app.relaunch()
+            autoUpdater.quitAndInstall(false, true) // Don't restart via quitAndInstall since we're using relaunch
         }, 2000)
     }
     if (myWindow && !myWindow.isDestroyed()) {
@@ -300,7 +304,9 @@ function setupIpcHandlers() {
 
     // Auto-updater IPC handler
     ipcMain.handle('restart-app', () => {
-        autoUpdater.quitAndInstall(true, true) // Restart immediately after install
+        // For better auto-restart, use app.relaunch() before quitAndInstall
+        app.relaunch()
+        autoUpdater.quitAndInstall(false, true) // Don't restart via quitAndInstall since we're using relaunch
     })
 
     // Manual update check for testing
