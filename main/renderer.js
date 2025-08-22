@@ -199,6 +199,7 @@ const settingsModal = document.getElementById('settings-modal');
 const settingsCloseBtn = document.getElementById('settings-close-btn');
 const settingsCancelBtn = document.getElementById('settings-cancel-btn');
 const settingsSaveBtn = document.getElementById('settings-save-btn');
+const checkUpdatesBtn = document.getElementById('check-updates-btn');
 
 // Settings controls
 const themeRadios = document.querySelectorAll('input[name="theme"]');
@@ -1784,6 +1785,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         settingsModal.style.display = 'none';
+    });
+    
+    checkUpdatesBtn.addEventListener('click', async () => {
+        const originalText = checkUpdatesBtn.textContent;
+        checkUpdatesBtn.textContent = 'Checking...';
+        checkUpdatesBtn.disabled = true;
+        
+        try {
+            const result = await ipcRenderer.invoke('check-for-updates-manual');
+            if (result.error) {
+                alert('Update check failed: ' + result.error);
+            } else {
+                alert('Update check completed. Check the console or restart the app to see if updates are available.');
+            }
+        } catch (error) {
+            alert('Update check failed: ' + error.message);
+        }
+        
+        checkUpdatesBtn.textContent = originalText;
+        checkUpdatesBtn.disabled = false;
     });
     
     // Close modal when clicking outside

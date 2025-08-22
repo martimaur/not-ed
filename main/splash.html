@@ -72,6 +72,45 @@
             animation: indeterminate 1.5s infinite ease-in-out;
         }
 
+        .debug-info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #ccc;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            max-height: 150px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .debug-info.show {
+            display: block;
+        }
+
+        .debug-toggle {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: #7662cf;
+            border: 1px solid #7662cf;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .debug-toggle:hover {
+            background: #9f7aea;
+            border-color: #9f7aea;
+        }
+
         .version {
             position: absolute;
             bottom: 20px;
@@ -126,7 +165,11 @@
         <div class="error" id="error" style="display: none;"></div>
     </div>
 
-    <div class="version" id="version">v1.0.12</div>
+    <div class="version" id="version">v1.0.13</div>
+    
+    <div class="debug-info" id="debug-info"></div>
+    <button class="debug-toggle" onclick="toggleDebug()">Debug</button>
+    <button class="debug-toggle" onclick="debugFetchReleases()" style="right: 80px; background: #e53e3e;">Fetch API</button>
 
     <script>
         const { ipcRenderer } = require('electron');
@@ -135,11 +178,77 @@
         const progressEl = document.getElementById('progress');
         const errorEl = document.getElementById('error');
         const versionEl = document.getElementById('version');
+        const debugEl = document.getElementById('debug-info');
+        
+        let debugMessages = [];
+        
+        function toggleDebug() {
+            debugEl.classList.toggle('show');
+        }
+        
+        async function debugFetchReleases() {
+            addDebugMessage('🔍 Fetching GitHub releases API...');
+            
+            try {
+                const result = await ipcRenderer.invoke('debug-fetch-releases');
+                
+                if (result.error) {
+                    addDebugMessage('❌ API Error: ' + result.error);
+                    if (result.rawData) {
+                        addDebugMessage('Raw response: ' + result.rawData.substring(0, 200) + '...');
+                    }
+                } else {
+                    addDebugMessage('✅ API Success!');
+                    addDebugMessage(`Current: ${result.currentVersion}`);
+                    addDebugMessage(`Latest: ${result.latestVersion}`);
+                    addDebugMessage(`Published: ${result.publishedAt}`);
+                    addDebugMessage(`Assets: ${result.assetsCount}`);
+                    addDebugMessage(`isDev: ${result.isDev}`);
+                    addDebugMessage(`isPackaged: ${result.isPackaged}`);
+                    
+                    // Version comparison
+                    const current = result.currentVersion.replace('v', '');
+                    const latest = result.latestVersion.replace('v', '');
+                    addDebugMessage(`Comparison: ${current} vs ${latest}`);
+                    
+                    if (current === latest) {
+                        addDebugMessage('🟡 Versions are equal - no update needed');
+                    } else {
+                        addDebugMessage('🟢 Versions differ - update should be available');
+                    }
+                }
+            } catch (error) {
+                addDebugMessage('💥 Debug fetch failed: ' + error.message);
+            }
+        }
+        
+        function addDebugMessage(msg) {
+            debugMessages.push(`[${new Date().toLocaleTimeString()}] ${msg}`);
+            if (debugMessages.length > 20) {
+                debugMessages = debugMessages.slice(-20);
+            }
+            debugEl.innerHTML = debugMessages.join('<br>');
+            debugEl.scrollTop = debugEl.scrollHeight;
+        }
 
         // Set version from main process
         ipcRenderer.invoke('get-app-version').then(version => {
             versionEl.textContent = `v${version}`;
+            addDebugMessage(`App version: ${version}`);
         });
+
+        // Add initial debug info
+        addDebugMessage('Splash screen initialized');
+        addDebugMessage('Waiting for environment info...');
+        
+        // Show debug window by default for testing
+        setTimeout(() => {
+            debugEl.classList.add('show');
+            // Auto-fetch releases info for debugging
+            setTimeout(() => {
+                debugFetchReleases();
+            }, 1000);
+        }, 500);
 
         // Update status messages
         ipcRenderer.on('splash-status', (event, message) => {
@@ -155,6 +264,11 @@
                 progressEl.classList.add('indeterminate');
                 progressEl.style.width = '30%';
             }
+        });
+
+        // Listen for debug messages
+        ipcRenderer.on('splash-debug', (event, message) => {
+            addDebugMessage(message);
         });
 
         // Show error
