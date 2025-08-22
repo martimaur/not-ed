@@ -3,6 +3,10 @@ const { autoUpdater } = require('electron-updater')
 const path = require('path')
 const fs = require('fs')
 
+// Get version from package.json
+const packageInfo = require('./package.json')
+const APP_VERSION = packageInfo.version
+
 // Check if running in development
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
 
@@ -35,7 +39,7 @@ if (!isDev) {
 // Auto-updater events
 autoUpdater.on('checking-for-update', () => {
     console.log('Checking for update...')
-    if (splashWindow) {
+    if (splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.webContents.send('splash-status', 'Checking for updates...')
         splashWindow.webContents.send('splash-progress', -1) // Indeterminate
     }
@@ -44,38 +48,50 @@ autoUpdater.on('checking-for-update', () => {
 autoUpdater.on('update-available', (info) => {
     console.log('Update available.')
     updateAvailable = true
-    if (splashWindow) {
+    if (splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.webContents.send('splash-status', `Downloading update v${info.version}...`)
         splashWindow.webContents.send('splash-progress', 0)
     }
-    if (myWindow) {
+    if (myWindow && !myWindow.isDestroyed()) {
         myWindow.webContents.send('update-available', info)
     }
 })
 
 autoUpdater.on('update-not-available', (info) => {
     console.log('Update not available.')
-    if (splashWindow) {
+    if (splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.webContents.send('splash-status', 'No updates available')
         setTimeout(() => {
-            splashWindow.webContents.send('splash-status', 'Starting application...')
-            setTimeout(() => {
+            if (splashWindow && !splashWindow.isDestroyed()) {
+                splashWindow.webContents.send('splash-status', 'Starting application...')
+                setTimeout(() => {
+                    createMainWindow()
+                    if (splashWindow && !splashWindow.isDestroyed()) {
+                        splashWindow.webContents.send('splash-close')
+                    }
+                }, 1000)
+            } else {
                 createMainWindow()
-                splashWindow.webContents.send('splash-close')
-            }, 1000)
+            }
         }, 1000)
+    } else {
+        createMainWindow()
     }
 })
 
 autoUpdater.on('error', (err) => {
     console.log('Error in auto-updater. ' + err)
     // Don't show error to user - just continue to app
-    if (splashWindow) {
+    if (splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.webContents.send('splash-status', 'Starting application...')
         setTimeout(() => {
             createMainWindow()
-            splashWindow.webContents.send('splash-close')
+            if (splashWindow && !splashWindow.isDestroyed()) {
+                splashWindow.webContents.send('splash-close')
+            }
         }, 1000)
+    } else {
+        createMainWindow()
     }
 })
 
@@ -85,11 +101,11 @@ autoUpdater.on('download-progress', (progressObj) => {
     log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')'
     console.log(log_message)
     
-    if (splashWindow) {
+    if (splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.webContents.send('splash-progress', Math.round(progressObj.percent))
         splashWindow.webContents.send('splash-status', `Downloading update... ${Math.round(progressObj.percent)}%`)
     }
-    if (myWindow) {
+    if (myWindow && !myWindow.isDestroyed()) {
         myWindow.webContents.send('download-progress', progressObj)
     }
 })
@@ -97,13 +113,13 @@ autoUpdater.on('download-progress', (progressObj) => {
 autoUpdater.on('update-downloaded', (info) => {
     console.log('Update downloaded')
     updateDownloaded = true
-    if (splashWindow) {
+    if (splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.webContents.send('splash-status', 'Update ready - Restarting...')
         setTimeout(() => {
             autoUpdater.quitAndInstall()
         }, 2000)
     }
-    if (myWindow) {
+    if (myWindow && !myWindow.isDestroyed()) {
         myWindow.webContents.send('update-downloaded', info)
     }
 })
@@ -116,6 +132,7 @@ let myWindow;
 let splashWindow;
 let updateAvailable = false;
 let updateDownloaded = false;
+let mainWindowCreated = false;
 
 app.whenReady().then(() => {
     setupIpcHandlers(); // Set up IPC handlers once
@@ -206,6 +223,11 @@ function setupIpcHandlers() {
     ipcMain.handle('check-for-updates', () => {
         console.log('Manual update check triggered')
         autoUpdater.checkForUpdatesAndNotify()
+    })
+
+    // Get app version
+    ipcMain.handle('get-app-version', () => {
+        return APP_VERSION
     })
 
     // Splash screen IPC handlers
@@ -307,6 +329,9 @@ function createSplashWindow() {
 }
 
 function createMainWindow() {
+    if (mainWindowCreated) return; // Prevent multiple windows
+    mainWindowCreated = true;
+    
     myWindow = new BrowserWindow({
         width: 1000,
         height: 700,
@@ -347,6 +372,14 @@ function createMainWindow() {
                     myWindow.destroy();
                 }
             }, 100);
+            
+            // Force close after 2 seconds if renderer doesn't respond
+            setTimeout(() => {
+                if (myWindow && !myWindow.isDestroyed()) {
+                    console.log('Force closing window after timeout');
+                    myWindow.destroy();
+                }
+            }, 2000);
         } catch (error) {
             console.error('Error during close:', error);
             if (myWindow && !myWindow.isDestroyed()) {
@@ -369,7 +402,7 @@ function createMainWindow() {
 }
 
 function startUpdateProcess() {
-    if (splashWindow) {
+    if (splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.webContents.send('splash-status', 'Checking for updates...')
     }
     
@@ -380,13 +413,13 @@ function startUpdateProcess() {
 
     // If no update found after 10 seconds, proceed to main app
     setTimeout(() => {
-        if (!updateAvailable && !updateDownloaded) {
-            if (splashWindow) {
+        if (!updateAvailable && !updateDownloaded && !mainWindowCreated) {
+            if (splashWindow && !splashWindow.isDestroyed()) {
                 splashWindow.webContents.send('splash-status', 'Starting application...')
             }
             setTimeout(() => {
                 createMainWindow()
-                if (splashWindow) {
+                if (splashWindow && !splashWindow.isDestroyed()) {
                     splashWindow.webContents.send('splash-close')
                 }
             }, 1000)

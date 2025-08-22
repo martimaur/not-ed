@@ -1,5 +1,18 @@
 const { ipcRenderer } = require('electron');
 
+// Load and display app version
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const version = await ipcRenderer.invoke('get-app-version');
+        const versionEl = document.getElementById('app-version');
+        if (versionEl) {
+            versionEl.textContent = `v${version}`;
+        }
+    } catch (error) {
+        console.error('Failed to get app version:', error);
+    }
+});
+
 // Window controls
 const minimizeBtn = document.getElementById('minimize-btn');
 const maximizeBtn = document.getElementById('maximize-btn');
