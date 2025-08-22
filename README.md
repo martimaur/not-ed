@@ -6,21 +6,21 @@
   
   [![GitHub release (latest by date)](https://img.shields.io/github/v/release/martimaur/not-ed?style=flat-square)](https://github.com/martimaur/not-ed/releases/latest)
   [![GitHub downloads](https://img.shields.io/github/downloads/martimaur/not-ed/total?style=flat-square)](https://github.com/martimaur/not-ed/releases)
-  [![License](https://img.shields.io/github/license/martimaur/not-ed?style=flat-square)](LICENSE)
   
 </div>
 
 ---
 
+<div align="center">
+  <img src="main/assets/screenshot.png" alt="Not|ed Screenshot" width="900">
+</div>
+
 ## Features
 
 - **Task Management**: Create, edit, and organize tasks with ease
+- **Text to Date**: You can write "today" or "at 8pm" on a task and it will automatically set the date
 - **Repeat Tasks**: Set tasks to repeat daily, weekly, monthly, or yearly
 - **Tab System**: Organize tasks into custom tabs with color coding
-- **Dark/Light Themes**: Switch between dark and light modes
-- **Responsive Design**: Animated panels and smooth transitions
-- **Auto-Updates**: Automatic updates via GitHub Releases
-- **Cross-Platform**: Available for Windows, macOS, and Linux
 
 ## Installation
 
