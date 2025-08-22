@@ -38,6 +38,8 @@ if (!isDev) {
     
     autoUpdater.autoDownload = true // Enable auto-download
     autoUpdater.autoInstallOnAppQuit = true
+    autoUpdater.allowDowngrade = false
+    autoUpdater.allowPrerelease = false
     
     console.log('Auto-updater configured for: martimaur/not-ed')
 } else {
@@ -46,37 +48,56 @@ if (!isDev) {
 
 // Auto-updater events
 autoUpdater.on('checking-for-update', () => {
-    const msg = `🔍 Checking for update... Current: ${APP_VERSION}, Repo: martimaur/not-ed`
-    console.log(msg)
+    console.log('Checking for update...')
     if (splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.webContents.send('splash-status', 'Checking for updates...')
         splashWindow.webContents.send('splash-progress', -1) // Indeterminate
-        splashWindow.webContents.send('splash-debug', msg)
     }
 })
 
 autoUpdater.on('update-available', (info) => {
-    const msg = `✅ Update available: v${info.version}`
-    console.log(msg)
+    console.log('Update available:', info.version)
     updateAvailable = true
     if (splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.webContents.send('splash-status', `Downloading update v${info.version}...`)
         splashWindow.webContents.send('splash-progress', 0)
-        splashWindow.webContents.send('splash-debug', msg)
-        splashWindow.webContents.send('splash-debug', `📦 Download URL: ${info.files?.[0]?.url || 'unknown'}`)
     }
     if (myWindow && !myWindow.isDestroyed()) {
         myWindow.webContents.send('update-available', info)
     }
 })
 
+autoUpdater.on('download-progress', (progressObj) => {
+    if (splashWindow && !splashWindow.isDestroyed()) {
+        const percent = Math.round(progressObj.percent)
+        splashWindow.webContents.send('splash-status', `Downloading update... ${percent}%`)
+        splashWindow.webContents.send('splash-progress', percent)
+    }
+})
+
+autoUpdater.on('update-downloaded', (info) => {
+    console.log('Update downloaded')
+    updateDownloaded = true
+    if (splashWindow && !splashWindow.isDestroyed()) {
+        splashWindow.webContents.send('splash-status', 'Update ready - Restarting...')
+        splashWindow.webContents.send('splash-progress', 100)
+    }
+    
+    // Close the splash window before restarting
+    if (splashWindow && !splashWindow.isDestroyed()) {
+        splashWindow.close()
+    }
+    
+    // Automatically install and restart with explicit options
+    setTimeout(() => {
+        autoUpdater.quitAndInstall(false, true) // Don't emit beforeQuit event, force restart
+    }, 1000)
+})
+
 autoUpdater.on('update-not-available', (info) => {
-    const msg = `❌ No update available. Latest: ${info?.version || 'unknown'}, Current: ${APP_VERSION}`
-    console.log(msg)
+    console.log('Update not available.')
     if (splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.webContents.send('splash-status', 'No updates available')
-        splashWindow.webContents.send('splash-debug', msg)
-        splashWindow.webContents.send('splash-debug', `🔗 Feed URL: martimaur/not-ed (GitHub)`)
         setTimeout(() => {
             if (splashWindow && !splashWindow.isDestroyed()) {
                 splashWindow.webContents.send('splash-status', 'Starting application...')
@@ -89,25 +110,22 @@ autoUpdater.on('update-not-available', (info) => {
             } else {
                 createMainWindow()
             }
-        }, 5000) // Increased from 1 to 5 seconds to see debug info longer
+        }, 1000) // Back to 1 second
     } else {
         createMainWindow()
     }
 })
 
 autoUpdater.on('error', (err) => {
-    const msg = `💥 Auto-updater error: ${err.message || err}`
-    console.log(msg)
+    console.log('Auto-updater error:', err.message || err)
     if (splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.webContents.send('splash-status', 'Starting application...')
-        splashWindow.webContents.send('splash-debug', msg)
-        splashWindow.webContents.send('splash-debug', `🔧 Stack: ${err.stack?.substring(0, 100) || 'no stack'}`)
         setTimeout(() => {
             createMainWindow()
             if (splashWindow && !splashWindow.isDestroyed()) {
                 splashWindow.webContents.send('splash-close')
             }
-        }, 5000) // Increased from 1 to 5 seconds to see error info longer
+        }, 1000) // Back to 1 second
     } else {
         createMainWindow()
     }
@@ -171,52 +189,6 @@ function setupIpcHandlers() {
     ipcMain.removeAllListeners('renderer-ready');
     ipcMain.removeAllListeners('set-zoom-level');
     ipcMain.removeAllListeners('window-controls');
-
-    // IPC handler for debug update check
-    ipcMain.handle('debug-fetch-releases', async () => {
-        try {
-            const https = require('https');
-            const url = 'https://api.github.com/repos/martimaur/not-ed/releases/latest';
-            
-            return new Promise((resolve, reject) => {
-                const req = https.get(url, {
-                    headers: {
-                        'User-Agent': 'not-ed-debug'
-                    }
-                }, (res) => {
-                    let data = '';
-                    res.on('data', chunk => data += chunk);
-                    res.on('end', () => {
-                        try {
-                            const release = JSON.parse(data);
-                            resolve({
-                                success: true,
-                                currentVersion: APP_VERSION,
-                                latestVersion: release.tag_name,
-                                publishedAt: release.published_at,
-                                assetsCount: release.assets.length,
-                                isDev: isDev,
-                                isPackaged: app.isPackaged
-                            });
-                        } catch (e) {
-                            resolve({ error: 'Failed to parse response: ' + e.message, rawData: data });
-                        }
-                    });
-                });
-                
-                req.on('error', (err) => {
-                    resolve({ error: 'Network error: ' + err.message });
-                });
-                
-                req.setTimeout(10000, () => {
-                    req.destroy();
-                    resolve({ error: 'Request timeout' });
-                });
-            });
-        } catch (error) {
-            return { error: 'Debug fetch error: ' + error.message };
-        }
-    });
 
     // IPC handler for manual update check
     ipcMain.handle('check-for-updates-manual', async () => {
@@ -396,25 +368,15 @@ function createSplashWindow() {
     splashWindow.once('ready-to-show', () => {
         splashWindow.show();
         
-        // Send initial debug info to splash window
-        if (splashWindow && !splashWindow.isDestroyed()) {
-            splashWindow.webContents.send('splash-debug', `Environment: ${isDev ? 'Development' : 'Production'}`)
-            splashWindow.webContents.send('splash-debug', `Current version: ${APP_VERSION}`)
-            splashWindow.webContents.send('splash-debug', `Auto-updater: ${!isDev ? 'Enabled' : 'Disabled'}`)
-            splashWindow.webContents.send('splash-debug', `app.isPackaged: ${app.isPackaged}`)
-            splashWindow.webContents.send('splash-debug', `NODE_ENV: ${process.env.NODE_ENV || 'undefined'}`)
-        }
-        
         if (!isDev) {
             startUpdateProcess();
         } else {
             // In development, skip update check and go straight to main app
             splashWindow.webContents.send('splash-status', 'Development mode - Starting application...');
-            splashWindow.webContents.send('splash-debug', 'Development mode - skipping update check');
             setTimeout(() => {
                 createMainWindow();
                 splashWindow.webContents.send('splash-close');
-            }, 10000); // 10 seconds instead of 2
+            }, 2000); // Back to 2 seconds
         }
     });
 }
@@ -493,37 +455,21 @@ function createMainWindow() {
 }
 
 function startUpdateProcess() {
-    console.log('Starting update process...')
-    console.log('- isDev:', isDev)
-    console.log('- Current version:', APP_VERSION)
-    console.log('- Auto-updater enabled:', !isDev)
-    
     if (splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.webContents.send('splash-status', 'Checking for updates...')
-        splashWindow.webContents.send('splash-debug', `Environment: ${isDev ? 'Development' : 'Production'}`)
-        splashWindow.webContents.send('splash-debug', `Current version: ${APP_VERSION}`)
-        splashWindow.webContents.send('splash-debug', `Auto-updater: ${!isDev ? 'Enabled' : 'Disabled'}`)
-        splashWindow.webContents.send('splash-debug', `app.isPackaged: ${app.isPackaged}`)
-        splashWindow.webContents.send('splash-debug', `NODE_ENV: ${process.env.NODE_ENV || 'undefined'}`)
     }
     
     if (!isDev) {
         // Start checking for updates
         setTimeout(() => {
-            console.log('Calling autoUpdater.checkForUpdatesAndNotify()...')
-            if (splashWindow && !splashWindow.isDestroyed()) {
-                splashWindow.webContents.send('splash-debug', 'Calling autoUpdater.checkForUpdatesAndNotify()...')
-            }
             autoUpdater.checkForUpdatesAndNotify()
         }, 1000)
 
-        // If no update found after 15 seconds, proceed to main app
+        // If no update found after 10 seconds, proceed to main app
         setTimeout(() => {
             if (!updateAvailable && !updateDownloaded && !mainWindowCreated) {
-                console.log('Timeout reached - no update found, starting main app')
                 if (splashWindow && !splashWindow.isDestroyed()) {
                     splashWindow.webContents.send('splash-status', 'Starting application...')
-                    splashWindow.webContents.send('splash-debug', 'Timeout reached - starting main app')
                 }
                 setTimeout(() => {
                     createMainWindow()
@@ -532,23 +478,7 @@ function startUpdateProcess() {
                     }
                 }, 1000)
             }
-        }, 15000) // Increased from 10 to 15 seconds
-    } else {
-        // In development mode, just show the app after a short delay
-        if (splashWindow && !splashWindow.isDestroyed()) {
-            splashWindow.webContents.send('splash-debug', 'Development mode - skipping update check')
-        }
-        setTimeout(() => {
-            if (splashWindow && !splashWindow.isDestroyed()) {
-                splashWindow.webContents.send('splash-status', 'Starting application...')
-            }
-            setTimeout(() => {
-                createMainWindow()
-                if (splashWindow && !splashWindow.isDestroyed()) {
-                    splashWindow.webContents.send('splash-close')
-                }
-            }, 1000)
-        }, 2000)
+        }, 10000) // Back to 10 seconds
     }
 }
 

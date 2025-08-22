@@ -1,6 +1,6 @@
 {
   "name": "noted",
-  "version": "1.0.17",
+  "version": "1.0.19",
   "description": "A modern task management app with tabs",
   "main": "main.js",
   "homepage": "https://github.com/martimaur/not-ed",
@@ -72,7 +72,12 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "artifactName": "not-ed-${version}-windows.exe"
+      "artifactName": "not-ed-${version}-windows.exe",
+      "allowElevation": true,
+      "perMachine": false,
+      "runAfterFinish": true,
+      "menuCategory": true,
+      "differentialPackage": true
     },
     "mac": {
       "target": "dmg",
