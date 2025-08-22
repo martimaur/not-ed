@@ -1,0 +1,75 @@
+name: Update README Download Links
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Get latest release info
+        id: release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: release } = await github.rest.repos.getLatestRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            
+            console.log('Latest release:', release.tag_name);
+            console.log('Assets:', release.assets.map(a => a.name));
+            
+            // Find the download URLs for each platform
+            const windowsAsset = release.assets.find(asset => asset.name.includes('windows.exe'));
+            const macAsset = release.assets.find(asset => asset.name.includes('.dmg'));
+            const linuxAsset = release.assets.find(asset => asset.name.includes('.AppImage'));
+            
+            return {
+              version: release.tag_name,
+              windows_url: windowsAsset ? windowsAsset.browser_download_url : '',
+              mac_url: macAsset ? macAsset.browser_download_url : '',
+              linux_url: linuxAsset ? linuxAsset.browser_download_url : ''
+            };
+            
+      - name: Update README
+        env:
+          RELEASE_INFO: ${{ steps.release.outputs.result }}
+        run: |
+          # Parse the release info
+          VERSION=$(echo '${{ steps.release.outputs.result }}' | jq -r '.version')
+          WINDOWS_URL=$(echo '${{ steps.release.outputs.result }}' | jq -r '.windows_url')
+          MAC_URL=$(echo '${{ steps.release.outputs.result }}' | jq -r '.mac_url')
+          LINUX_URL=$(echo '${{ steps.release.outputs.result }}' | jq -r '.linux_url')
+          
+          echo "Updating README with:"
+          echo "Version: $VERSION"
+          echo "Windows: $WINDOWS_URL"
+          echo "macOS: $MAC_URL"
+          echo "Linux: $LINUX_URL"
+          
+          # Update the README file
+          sed -i "s|https://github.com/martimaur/not-ed/releases/latest/download/not-ed-.*-windows\.exe|$WINDOWS_URL|g" README.md
+          sed -i "s|https://github.com/martimaur/not-ed/releases/latest/download/not-ed-.*\.dmg|$MAC_URL|g" README.md
+          sed -i "s|https://github.com/martimaur/not-ed/releases/latest/download/not-ed-.*\.AppImage|$LINUX_URL|g" README.md
+          
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          if [[ `git status --porcelain` ]]; then
+            git add README.md
+            git commit -m "🤖 Auto-update README download links for ${{ fromJson(steps.release.outputs.result).version }}"
+            git push
+          else
+            echo "No changes to commit"
+          fi

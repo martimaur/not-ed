@@ -32,20 +32,20 @@
 
 ### 📥 **Download Latest Version**
 
-[![Download for Windows](https://img.shields.io/badge/Windows-Download-blue?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/martimaur/not-ed/releases/latest)
-[![Download for macOS](https://img.shields.io/badge/macOS-Download-lightgrey?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/martimaur/not-ed/releases/latest)
-[![Download for Linux](https://img.shields.io/badge/Linux-Download-orange?style=for-the-badge&logo=linux&logoColor=white)](https://github.com/martimaur/not-ed/releases/latest)
+[![Download for Windows](https://img.shields.io/badge/Windows-Download-blue?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/martimaur/not-ed/releases/download/v1.1.0/not-ed-1.1.0-windows.exe)
+[![Download for macOS](https://img.shields.io/badge/macOS-Download-lightgrey?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/martimaur/not-ed/releases/download/v1.1.0/not-ed-1.1.0.dmg)
+[![Download for Linux](https://img.shields.io/badge/Linux-Download-orange?style=for-the-badge&logo=linux&logoColor=white)](https://github.com/martimaur/not-ed/releases/download/v1.1.0/not-ed-1.1.0.AppImage)
 
-<p><em>💡 Click above to get the latest version • Auto-updates included</em></p>
+<p><em>💡 Click to instantly download • Auto-updates included • Links update automatically with each release</em></p>
 
 </div>
 
 ### Quick Install Guide
 
-1. **Click your platform badge above** to go to the latest release
-2. **Windows**: Download the `.exe` file and run the installer
-3. **macOS**: Download the `.dmg` file and drag to Applications
-4. **Linux**: Download the `.AppImage` file, make executable and run: `chmod +x not-ed-*.AppImage && ./not-ed-*.AppImage`
+1. **Click your platform badge above** to instantly download the latest version
+2. **Windows**: Run the downloaded `.exe` file to install
+3. **macOS**: Open the downloaded `.dmg` file and drag to Applications
+4. **Linux**: Make the downloaded `.AppImage` executable and run: `chmod +x not-ed-*.AppImage && ./not-ed-*.AppImage`
 
 > **Note**: The app includes automatic updates, so you'll always stay current with the latest features and fixes!
 
