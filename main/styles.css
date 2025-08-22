@@ -2113,6 +2113,15 @@ body[data-theme="light"] {
     box-shadow: 0 0 8px color-mix(in srgb, var(--tab-color) 25%, transparent);
 }
 
+[data-theme="light"] .tab[data-color].active {
+    background: var(--tab-color);
+    border: 1px solid var(--tab-color);
+    border-left: 5px solid var(--tab-color);
+    color: white;
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--tab-color) 40%, transparent),
+                0 0 8px color-mix(in srgb, var(--tab-color) 30%, transparent);
+}
+
 [data-theme="light"] #quick-add-input {
     background: #ffffff;
     border-color: #e2e8f0;
@@ -2123,7 +2132,7 @@ body[data-theme="light"] {
     border-color: var(--accent-color);
 }
 
-[data-theme="light"] .stats-pane;l,
+[data-theme="light"] .stats-panel,
 [data-theme="light"] .weekly-panel {
     background: #ffffff;
     border-color: #e2e8f0;
