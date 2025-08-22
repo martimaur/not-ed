@@ -24,14 +24,14 @@ if (!isDev) {
     console.log('Production mode - Auto-updater enabled')
     
     // Configure auto-updater settings
-    autoUpdater.autoDownload = false // Don't auto-download updates
-    autoUpdater.checkForUpdatesAndNotify = () => {
-        return autoUpdater.checkForUpdates().catch(err => {
-            console.log('Update check failed (this is normal):', err.message)
-            // Emit update-not-available to continue with app startup
-            autoUpdater.emit('update-not-available')
-        })
-    }
+    autoUpdater.setFeedURL({
+        provider: 'github',
+        owner: 'martimaur',
+        repo: 'not-ed'
+    })
+    
+    autoUpdater.autoDownload = true // Enable auto-download
+    autoUpdater.autoInstallOnAppQuit = true
 } else {
     console.log('Development mode - Auto-updater disabled')
 }
@@ -39,6 +39,8 @@ if (!isDev) {
 // Auto-updater events
 autoUpdater.on('checking-for-update', () => {
     console.log('Checking for update...')
+    console.log('Current version:', APP_VERSION)
+    console.log('Repository: martimaur/not-ed')
     if (splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.webContents.send('splash-status', 'Checking for updates...')
         splashWindow.webContents.send('splash-progress', -1) // Indeterminate
@@ -59,6 +61,8 @@ autoUpdater.on('update-available', (info) => {
 
 autoUpdater.on('update-not-available', (info) => {
     console.log('Update not available.')
+    console.log('Latest available version:', info?.version || 'unknown')
+    console.log('Current version:', APP_VERSION)
     if (splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.webContents.send('splash-status', 'No updates available')
         setTimeout(() => {
